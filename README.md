@@ -1,9 +1,9 @@
 <p align="center">
     <p align="center">
-        <img src="https://user-images.githubusercontent.com/58805033/191936702-fed04b0f-7966-4041-96d0-95e27bf98248.png" width="280" height="280" />
+        <img src="https://user-images.githubusercontent.com/58805033/191936702-fed04b0f-7966-4041-96d0-95e27bf98248.png" width="280" height="80" style="height: 80px;" />
     </p>
     <p align="center">
-        Private internal functionality for Fleetbase SaaS
+        Internal Bridge between Fleetbase API and Extensions Registry
     </p>
 </p>
 
@@ -11,7 +11,7 @@
 
 ## Overview
 
-This monorepo contains both the frontend and backend components of the Internals extension for Fleetbase. The frontend is built using Ember.js and the backend is implemented in PHP.
+This monorepo contains both the frontend and backend components of the Internal Registry Bridge for Fleetbase. The frontend is built using Ember.js and the backend is implemented in PHP.
 
 * PHP 7.3.0 or above
 * Ember.js v4.8 or above
