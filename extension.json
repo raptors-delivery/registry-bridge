@@ -1,0 +1,10 @@
+{
+    "name": "Registry Bridge",
+    "version": "0.0.1",
+    "description": "Internal Bridge between Fleetbase API and Extensions Registry",
+    "repository": "https://github.com/fleetbase/registry-bridge",
+    "license": "MIT",
+    "author": "Fleetbase Pte Ltd <hello@fleetbase.io>",
+    "engine": "package.json",
+    "api": "composer.json"
+}
