@@ -10,7 +10,7 @@ return [
         'version' => '0.0.1',
         'routing' => [
             'prefix' => '~registry',
-            'internal_prefix' => 'int'
+            'internal_prefix' => 'v1'
         ],
     ]
 ];

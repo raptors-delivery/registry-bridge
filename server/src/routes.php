@@ -13,10 +13,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix(config('internals.api.routing.prefix', '~registry'))->namespace('Fleetbase\RegistryBridge\Http\Controllers\Internal\v1')->group(
+Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware(['fleetbase.registry'])->namespace('Fleetbase\RegistryBridge\Http\Controllers')->group(
     function ($router) {
-        $router->group(['namespace' => 'auth'], function ($router) {
-            $router->post('add-user', 'RegistryAuthController@addUser');
+        /*
+         * Internal Routes v1
+         */
+        $router->group(['prefix' => config('internals.api.routing.internal_prefix', 'v1'), 'namespace' => 'Internal\v1'], function ($router) {
+            $router->group(['prefix' => 'auth'], function ($router) {
+                $router->post('authenticate', 'RegistryAuthController@authenticate');
+                $router->post('add-user', 'RegistryAuthController@addUser');
+            });
         });
     }
 );

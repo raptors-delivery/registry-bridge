@@ -3,7 +3,6 @@
 namespace Fleetbase\RegistryBridge\Providers;
 
 use Fleetbase\Providers\CoreServiceProvider;
-use Illuminate\Support\Facades\Event;
 
 if (!class_exists(CoreServiceProvider::class)) {
     throw new \Exception('Registry Bridge cannot be loaded without `fleetbase/core-api` installed!');
@@ -11,8 +10,6 @@ if (!class_exists(CoreServiceProvider::class)) {
 
 /**
  * Registry Bridge service provider.
- *
- * @package \Fleetbase\RegistryBridge\Providers
  */
 class RegistryBridgeServiceProvider extends CoreServiceProvider
 {
@@ -22,6 +19,20 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      * @var array
      */
     public $observers = [];
+
+    /**
+     * The middleware groups registered with the service provider.
+     *
+     * @var array
+     */
+    public $middleware = [
+        'fleetbase.registry' => [
+            'throttle:60,1',
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Fleetbase\Http\Middleware\AuthenticateOnceWithBasicAuth::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+    ];
 
     /**
      * Register any application services.
@@ -46,9 +57,13 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      *
      * @return void
      *
-     * @throws \Exception If the `fleetbase/core-api` package is not installed.
+     * @throws \Exception if the `fleetbase/core-api` package is not installed
      */
     public function boot()
     {
+        $this->registerMiddleware();
+        $this->loadRoutesFrom(__DIR__ . '/../routes.php');
+        $this->loadMigrationsFrom(__DIR__ . '/../../migrations');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/registry-bridge.php', 'registry-bridge');
     }
 }
