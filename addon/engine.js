@@ -14,7 +14,10 @@ export default class RegistryBridgeEngine extends Engine {
         services,
         externalRoutes,
     };
-    setupExtension = function (app, engine, universe) {};
+    setupExtension = function (app, engine, universe) {
+        // register menu item in header
+        universe.registerHeaderMenuItem('Extensions', 'console.registry-bridge', { icon: 'shapes', priority: 99 });
+    };
 }
 
 loadInitializers(RegistryBridgeEngine, modulePrefix);
