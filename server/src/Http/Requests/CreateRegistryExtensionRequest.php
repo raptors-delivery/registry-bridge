@@ -24,7 +24,8 @@ class CreateRegistryExtensionRequest extends FleetbaseRequest
     public function rules()
     {
         return [
-            'name' => ['required', 'min:3', 'unique:registry_extensions,name'],
+            'name'        => ['required', 'min:3', 'unique:registry_extensions,name'],
+            'description' => ['required', 'min:12'],
         ];
     }
 }

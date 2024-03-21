@@ -3,6 +3,8 @@
 namespace Fleetbase\RegistryBridge\Models;
 
 use Fleetbase\Casts\Json;
+use Fleetbase\Casts\Money;
+use Fleetbase\Models\Category;
 use Fleetbase\Models\Company;
 use Fleetbase\Models\File;
 use Fleetbase\Models\Model;
@@ -45,6 +47,7 @@ class RegistryExtension extends Model
         'uuid',
         'company_uuid',
         'created_by_uuid',
+        'category_uuid',
         'registry_user_uuid',
         'icon_uuid',
         'public_id',
@@ -59,6 +62,7 @@ class RegistryExtension extends Model
         'subscription_model',
         'subscription_amount',
         'subscription_tiers',
+        'currency',
         'slug',
         'version',
         'fa_icon',
@@ -90,6 +94,9 @@ class RegistryExtension extends Model
         'languages'             => Json::class,
         'meta'                  => Json::class,
         'core_extension'        => 'boolean',
+        'price'                 => Money::class,
+        'sale_price'            => Money::class,
+        'subscription_amount'   => Money::class,
     ];
 
     /**
@@ -148,6 +155,14 @@ class RegistryExtension extends Model
     public function icon()
     {
         return $this->belongsTo(File::class, 'icon_uuid', 'uuid');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_uuid', 'uuid');
     }
 
     /**

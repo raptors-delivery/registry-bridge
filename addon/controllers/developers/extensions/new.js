@@ -1,6 +1,7 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { inject as service } from '@ember/service';
+import { action } from '@ember/object';
 import { task } from 'ember-concurrency';
 
 export default class DevelopersExtensionsNewController extends Controller {
@@ -17,5 +18,15 @@ export default class DevelopersExtensionsNewController extends Controller {
             return this.notifications.warning(error.message);
         }
         return this.hostRouter.transitionTo('console.registry-bridge.developers.extensions.edit', this.extension);
+    }
+
+    @action cancel() {
+        this.reset();
+        return this.hostRouter.transitionTo('console.registry-bridge.developers.extensions');
+    }
+
+    reset() {
+        this.extension.destroyRecord();
+        this.extension = this.store.createRecord('registry-extension');
     }
 }

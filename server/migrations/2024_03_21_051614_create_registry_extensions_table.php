@@ -18,6 +18,7 @@ return new class extends Migration
             $table->uuid('created_by_uuid')->nullable();
             $table->uuid('registry_user_uuid')->nullable();
             $table->uuid('icon_uuid')->nullable();
+            $table->uuid('category_uuid')->nullable();
             $table->string('public_id')->nullable()->index();
             $table->string('name');
             $table->string('subtitle')->nullable();
@@ -30,6 +31,7 @@ return new class extends Migration
             $table->string('subscription_model')->nullable(); // flat_rate, usage, tiered
             $table->integer('subscription_amount')->nullable();
             $table->json('subscription_tiers')->nullable(); // [{ first: 1, last: 5, per_unit: 100, flat_fee: 0 }]
+            $table->string('currency')->default('USD');
             $table->string('slug');
             $table->string('version')->nullable();
             $table->string('fa_icon')->nullable();
@@ -54,6 +56,7 @@ return new class extends Migration
             $table->foreign('created_by_uuid')->references('uuid')->on('users')->onDelete('cascade');
             $table->foreign('registry_user_uuid')->references('uuid')->on('registry_users')->onDelete('cascade');
             $table->foreign('icon_uuid')->references('uuid')->on('files')->onDelete('cascade');
+            $table->foreign('category_uuid')->references('uuid')->on('categories')->onDelete('cascade');
         });
     }
 

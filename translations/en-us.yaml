@@ -5,7 +5,11 @@ registry-bridge:
       extensions: Extensions
       create-new-extension: Create new Extension
       new-extension: New Extension
-      new-extension-form:
+      extension: Extension
+      explore:
+        explore-extensions: Explore Extensions
+        explore-category-extensions: Explore {categoryName} Extensions
+      extension-form:
         extension-name: Extension Name
         extension-icon: Extension Icon
         upload-extension-icon: Upload Icon
@@ -14,3 +18,50 @@ registry-bridge:
         extension-add-tags: Add keywords and tags
         extension-promotional-text: Promotional Text
         details-content-block: Extension Details
+        extension-listing-details: Listing Details
+        extension-subtitle: Subtitle
+        extension-website-url: Website URL
+        extension-repo-url: Repository URL
+        extension-support-url: Support URL
+        extension-privacy-policy-url: Privacy Policy URL
+        extension-tos-url: Terms of Service URL
+        extension-primary-language: Primary Language
+        extension-version: Version
+        extension-copyright: Copyright
+        extension-copyright-help-text: Enter the copyright notice for your extension. This typically includes the year and the name of the copyright owner or company.
+        extension-payment-required: Payment Required
+        extension-payment-required-help-text: Determines if payment or subscription is required for users to install this extension.
+        extension-price: Price
+        extension-price-help-text: Specify the regular price of the extension. This is the standard cost for users to purchase or access the extension.
+        extension-sale-price: Sale Price
+        extension-sale-price-help-text: If the extension is currently offered at a discounted rate, enter the sale price here. This should be less than the regular price.
+        extension-subscription-required: Subscription Required
+        extension-subscription-required-help-text: Determines if user must have a subscription to install and use this extension.
+        extension-subscription-billing-period: Subscription Billing Period
+        extension-subscription-billing-period-placeholder: Select Billing Period
+        extension-subscription-billing-period-help-text: Specify the billing period for the subscription. Examples include monthly, quarterly, annually, or other custom intervals.
+        extension-subscription-amount: Subscription Amount
+        extension-subscription-amount-help-text: Enter the standard amount to be charged for the subscription. This should reflect the regular price before any discounts or tiered pricing adjustments.
+        extension-subscription-model: Subscription Model
+        extension-subscription-model-help-text: Determines the type of subscription pricing model to follow. Options include flate rate, tiered, and usage based subscription.
+        extension-subscription-tiers: Subscription Tiers
+        extension-subscription-tiers-help-text: Define the different pricing tiers for the subscription, if applicable. Include details like the tier levels, pricing for each tier, and any specific features or limitations of each tier.
+        extension-name-help-text: Enter the official name of the extension. This will be displayed as the primary identifier for users.
+        extension-icon-help-text: Upload an icon representing the extension. This icon will be used in listings and search results.
+        extension-description-help-text: Provide a detailed description of what the extension does and its key features. This information helps users understand the extension's functionality.
+        extension-tags-help-text: Add relevant keywords and tags that describe the extension, helping users find it through search.
+        extension-promotional-text-help-text: Write promotional text to highlight the extension's unique selling points. This text will be used in marketing or featured sections.
+        extension-subtitle-help-text: Provide a brief subtitle that offers additional context or information about the extension.
+        extension-website-url-help-text: Enter the URL to the extension's official website or product page for more information.
+        extension-repo-url-help-text: Provide the URL to the extension's code repository (e.g., GitHub, GitLab), if applicable.
+        extension-support-url-help-text: Specify the URL where users can obtain support, ask questions, or report issues with the extension.
+        extension-privacy-policy-url-help-text: Link to the privacy policy document that details how user data is handled and protected.
+        extension-tos-url-help-text: Link to the Terms of Service document that users must agree to before using the extension.
+        extension-primary-language-help-text: Specify the primary language the extension is developed or available in.
+        extension-version-help-text: Indicate the current version of the extension. This is important for tracking updates and compatibility.
+        extension-payment-details: Payment Details
+        extension-screenshots: Screenshots
+        upload-screenshots: Upload Screenshots
+        submit-for-review: Submit for Review
+        extension-bundle: Extension Bundle
+        extension-upload-bundle: Upload Extension Bundle
