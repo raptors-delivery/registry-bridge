@@ -1,7 +1,9 @@
 <EmberWormhole @to="sidebar-menu-items">
     <Layout::Sidebar::Panel @open={{true}} @title="Developers">
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.extensions.new" @icon="plus">Submit new Extension</Layout::Sidebar::Item>
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.extensions" @icon="list">Extensions</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.registry-bridge.developers.extensions" @icon="shapes">Extensions</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.registry-bridge.developers.analytics" @icon="chart-simple">Analytics</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.registry-bridge.developers.payments" @icon="cash-register">Payments</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.registry-bridge.developers.credentials" @icon="key">Credentials</Layout::Sidebar::Item>
     </Layout::Sidebar::Panel>
 </EmberWormhole>
 

@@ -23,6 +23,7 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                 $router->post('authenticate', 'RegistryAuthController@authenticate');
                 $router->post('add-user', 'RegistryAuthController@addUser');
             });
+            $router->fleetbaseRoutes('registry-extensions');
         });
     }
 );

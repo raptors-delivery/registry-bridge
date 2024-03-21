@@ -1,2 +1,21 @@
-{{page-title "Index"}}
-{{outlet}}
+<Layout::Section::Header @title={{t "registry-bridge.developers.extensions.extensions"}}>
+    <Button @type="primary" @size="sm" @icon="circle-plus" @text={{t "registry-bridge.developers.extensions.create-new-extension"}} @onClick={{transition-to "developers.extensions.new"}} />
+</Layout::Section::Header>
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="p-4">
+        <div class="flex flex-row">
+            {{#each @model as |extension|}}
+                <button type="button" class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-36 hover:border-blue-500" {{on "click" (transition-to "developers.extensions.edit" extension)}}>
+                    <div class="flex items-center justify-center rounded-t-lg w-36 h-36" {{background-url extension.icon_url overlay=true}}>
+                        <Image src={{extension.icon_url}} class="w-full h-full rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
+                    </div>
+                    <div class="px-4 py-2 flex-col rounded-b-lg bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+                        <span class="font-semibold text-sm block">{{extension.name}}</span>
+                    </div>
+                </button>
+            {{/each}}
+        </div>
+    </div>
+    <Spacer @height="300px" />
+</Layout::Section::Body>

@@ -57,14 +57,14 @@ Install the PHP packages using Composer:
 
 ```bash
 composer require fleetbase/core-api
-composer require fleetbase/internals-api
+composer require fleetbase/registry-bridge
 ```
 ### Frontend
 
 Install the Ember.js Engine/Addon:
 
 ```bash
-pnpm install @fleetbase/internals-engine
+pnpm install @fleetbase/registry-bridge-engine
 ```
 
 ## Usage

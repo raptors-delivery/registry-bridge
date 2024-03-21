@@ -31,6 +31,9 @@ dependencies:
   ember-radio-button:
     specifier: ^3.0.0-beta.1
     version: 3.0.0-beta.1
+  ember-tag-input:
+    specifier: ^3.1.0
+    version: 3.1.0
   ember-wormhole:
     specifier: ^0.6.0
     version: 0.6.0
@@ -8157,6 +8160,16 @@ packages:
       - ember-source
       - supports-color
       - webpack
+    dev: false
+
+  /ember-tag-input@3.1.0:
+    resolution: {integrity: sha512-DSLYpZ5n4Buyo2sWObmXw4dYoA3RB9y+HgFabK5Uz8k3EnBn1Mt9RzOh0nju4fWjlvQMjjjouIu6Afb+xIES8g==}
+    engines: {node: 12.* || 14.* || >= 16}
+    dependencies:
+      ember-cli-babel: 7.26.11
+      ember-cli-htmlbars: 6.3.0
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /ember-template-imports@3.4.2:

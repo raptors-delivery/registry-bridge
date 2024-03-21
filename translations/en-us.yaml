@@ -1,2 +1,16 @@
-internals:
-  extension-name: Internals
+registry-bridge:
+  extension-name: Registry Bridge
+  developers:
+    extensions:
+      extensions: Extensions
+      create-new-extension: Create new Extension
+      new-extension: New Extension
+      new-extension-form:
+        extension-name: Extension Name
+        extension-icon: Extension Icon
+        upload-extension-icon: Upload Icon
+        extension-description: Description
+        extension-tags: Tags
+        extension-add-tags: Add keywords and tags
+        extension-promotional-text: Promotional Text
+        details-content-block: Extension Details

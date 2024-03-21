@@ -1,2 +1,51 @@
-{{page-title "Edit"}}
-{{outlet}}
+<Layout::Section::Header @title={{t "registry-bridge.developers.extensions.new-extension"}} />
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="container">
+        <div class="max-w-3xl mx-auto mt-4">
+            <div class="flex flex-row items-start">
+                <div class="w-32 flex flex-col justify-center">
+                    <div class="mb-2">
+                        <Image src={{@model.icon_url}} @fallbackSrc={{config "defaultValues.extensionIcon"}} alt={{@model.name}} class="w-32 h-32 rounded-lg border border-black shadow-sm" />
+                    </div>
+                    {{#if (and @model.name (gt @model.name.length 3))}}
+                        <FileUpload @name={{t "registry-bridge.developers.extensions.new-extension-form.upload-extension-icon"}} @accept="image/*" @onFileAdded={{perform this.uploadIcon}} @labelClass="flex flex-row items-center justify-center" as |queue|>
+                            <a tabindex={{0}} class="flex items-center px-0 mt-2 text-xs no-underline truncate btn btn-sm btn-default" disabled={{or (not @model.name) queue.files.length}}>
+                                {{#if queue.files.length}}
+                                    <div class="mr-1.5">
+                                        <Spinner />
+                                    </div>
+                                    <span>
+                                        {{t "common.uploading"}}
+                                    </span>
+                                {{else}}
+                                    <FaIcon @icon="icons" class="mr-1.5" />
+                                    <span>
+                                        {{t "registry-bridge.developers.extensions.new-extension-form.upload-extension-icon"}}
+                                    </span>
+                                {{/if}}
+                            </a>
+                        </FileUpload>
+                    {{/if}}
+                </div>
+                <div class="flex-1 px-6">
+                    <ContentPanel @title={{t "registry-bridge.developers.extensions.new-extension-form.details-content-block"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
+                        <InputGroup @name={{t "registry-bridge.developers.extensions.new-extension-form.extension-name"}} @value={{@model.name}} />
+                        <InputGroup @name={{t "registry-bridge.developers.extensions.new-extension-form.extension-description"}}>
+                            <Textarea @value={{@model.description}} placeholder={{t "registry-bridge.developers.extensions.new-extension-form.extension-description"}} class="form-input w-full" rows="3" />
+                        </InputGroup>
+                        <InputGroup @name={{t "registry-bridge.developers.extensions.new-extension-form.extension-tags"}}>
+                            <TagInput class="form-input" @placeholder={{t "registry-bridge.developers.extensions.new-extension-form.extension-add-tags"}} @allowSpacesInTags={{true}} @tags={{@modeltags}} @addTag={{this.addTag}} @removeTagAtIndex={{this.removeTag}} @disabled={{this.core_extension}} as |tag|>
+                                {{tag}}
+                            </TagInput>
+                        </InputGroup>
+                    </ContentPanel>
+                    <div class="mt-4">
+                        <Button @size="lg" @type="primary" @text="Save" @icon="check" @onClick={{perform this.save}} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <Spacer @height="500px" />
+</Layout::Section::Body>
