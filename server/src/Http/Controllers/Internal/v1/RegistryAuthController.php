@@ -130,21 +130,22 @@ class RegistryAuthController extends Controller
     }
 
     /**
-     * Validates whether a user is allowed to publish a specified package to the registry.
+     * Validates whether a user is allowed to publish or unpublish a specified package in the registry.
      *
-     * This function, upon receiving a request, first extracts the user's identity and the package name.
-     * It then performs several checks:
-     *   1. Verifies that the package (extension) exists in the registry.
-     *   2. Confirms that the user associated with the given identity exists.
+     * This function extracts the user's identity, the package name, and the desired action ('publish' or 'unpublish')
+     * from the request. It then performs several checks:
+     *   1. Verifies that the specified package (extension) exists in the registry.
+     *   2. Confirms the existence of the user associated with the provided identity.
      *   3. Checks if the user has administrative privileges.
-     *   4. Ensures that the extension's status is 'approved'.
-     * If all these conditions are met, the function concludes that the user is allowed to publish the package
-     * and returns a JSON response indicating this. If any of these checks fail, an error response is returned.
+     *   4. Ensures that the extension's status allows the desired action (either 'approved' or 'published' for publishing,
+     *      'published' for unpublishing).
+     * If these conditions are met, the function updates the extension's status based on the action and returns a
+     * JSON response indicating the action is allowed. If any of these checks fail, it returns an error response.
      *
-     * @param RegistryAuthRequest $request the request containing the user's identity and package information
+     * @param RegistryAuthRequest $request the request containing the user's identity, package information, and action
      *
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
-     *                                                                 Returns a JSON response indicating publishing is allowed if all checks pass, or
+     *                                                                 Returns a JSON response indicating the action is allowed if all checks pass, or
      *                                                                 an error response if any check fails
      */
     public function checkPublishAllowed(RegistryAuthRequest $request)
