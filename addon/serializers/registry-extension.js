@@ -11,7 +11,10 @@ export default class RegistryExtensionSerializer extends ApplicationSerializer.e
         return {
             company: { embedded: 'always' },
             created_by: { embedded: 'always' },
+            category: { embedded: 'always' },
             icon: { embedded: 'always' },
+            latest_bundle: { embedded: 'always' },
+            screenshots: { embedded: 'always' },
         };
     }
 }

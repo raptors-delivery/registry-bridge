@@ -22,8 +22,15 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
             $router->group(['prefix' => 'auth'], function ($router) {
                 $router->post('authenticate', 'RegistryAuthController@authenticate');
                 $router->post('add-user', 'RegistryAuthController@addUser');
+                $router->post('check-access', 'RegistryAuthController@checkAccess');
+                $router->post('check-publish', 'RegistryAuthController@checkPublishAllowed');
             });
-            $router->fleetbaseRoutes('registry-extensions');
+            $router->fleetbaseRoutes('registry-extensions', function ($router, $controller) {
+                $router->post('{id}/submit', $controller('submit'));
+                $router->post('approve', $controller('approve'));
+                $router->post('reject', $controller('reject'));
+                $router->get('download-bundle', $controller('downloadBundle'));
+            });
         });
     }
 );

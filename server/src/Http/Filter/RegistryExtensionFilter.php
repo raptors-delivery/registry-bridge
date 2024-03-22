@@ -1,9 +1,9 @@
 <?php
 
-namespace Fleetbase\FleetOps\Http\Filter;
+namespace Fleetbase\RegistryBridge\Http\Filter;
 
-use Fleetbase\FleetOps\Support\Utils;
 use Fleetbase\Http\Filter\Filter;
+use Fleetbase\Support\Utils;
 
 class RegistryExtensionFilter extends Filter
 {

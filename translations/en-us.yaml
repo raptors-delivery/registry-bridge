@@ -1,5 +1,26 @@
 registry-bridge:
   extension-name: Registry Bridge
+  component:
+    extension-pending-publish-viewer:
+      content-panel-title: Extensions Pending Publish
+      focused-extension-title: >
+        {extensionName} Details
+      download-bundle: Download Bundle
+      view-details: View Details
+      no-extensions-awaiting-publish: No extensions awaiting publish
+    extension-reviewer-control:
+      content-panel-title: Extensions Awaiting Review
+      focused-extension-title: >
+        {extensionName} Details
+      approve-confirm-title: Are you sure you want to approve this extension?
+      approve-confirm-body: This extension should be thoroughly tested in both a development and test environment and tested for compliance as well as security issues. Once approved the extension will need to be manually published to the registry.
+      decline-confirm-title: Are you sure you want to reject this extension?
+      decline-confirm-body: This extension will be rejected, but the author will be given a chance to make corrections and re-submit for review.
+      download-bundle: Download Bundle
+      view-details: View Details
+      approve: Approve
+      reject: Reject
+      no-extensions-awaiting-review: No extensions awaiting review
   developers:
     extensions:
       extensions: Extensions
@@ -8,8 +29,16 @@ registry-bridge:
       extension: Extension
       explore:
         explore-extensions: Explore Extensions
-        explore-category-extensions: Explore {categoryName} Extensions
+        explore-category-extensions: >
+          {categoryName} Extensions
       extension-form:
+        package-name: Package Name
+        package-json-name: package.json name
+        composer-json-name: composer.json name
+        submission-success-message: Extension submitted and is awaiting review.
+        extension-category: Category
+        extension-category-help-text: Select the category in which users will be able to find your extension.
+        extension-select-category: Select Category
         extension-name: Extension Name
         extension-icon: Extension Icon
         upload-extension-icon: Upload Icon

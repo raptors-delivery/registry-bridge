@@ -7,4 +7,12 @@ export default class DevelopersExtensionsEditRoute extends Route {
     model(params) {
         return this.store.findRecord('registry-extension', params.public_id);
     }
+
+    setupController(controller) {
+        super.setupController(...arguments);
+        const isReady = controller.validateExtensionForReview();
+        if (isReady === true) {
+            controller.isReady = isReady;
+        }
+    }
 }

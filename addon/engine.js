@@ -3,6 +3,8 @@ import loadInitializers from 'ember-load-initializers';
 import Resolver from 'ember-resolver';
 import config from './config/environment';
 import services from '@fleetbase/ember-core/exports/services';
+import ExtensionReviewerControlComponent from './components/extension-reviewer-control';
+import ExtensionPendingPublishViewerComponent from './components/extension-pending-publish-viewer';
 
 const { modulePrefix } = config;
 const externalRoutes = ['console', 'extensions'];
@@ -15,8 +17,27 @@ export default class RegistryBridgeEngine extends Engine {
         externalRoutes,
     };
     setupExtension = function (app, engine, universe) {
-        // register menu item in header
+        // Register menu item in header
         universe.registerHeaderMenuItem('Extensions', 'console.registry-bridge', { icon: 'shapes', priority: 99 });
+        // Register admin controls
+        universe.registerAdminMenuPanel(
+            'Extensions Registry',
+            [
+                {
+                    title: 'Extensions Awaiting Review',
+                    icon: 'gavel',
+                    component: ExtensionReviewerControlComponent,
+                },
+                {
+                    title: 'Extensions Pending Publish',
+                    icon: 'rocket',
+                    component: ExtensionPendingPublishViewerComponent,
+                },
+            ],
+            {
+                slug: 'extension-registry',
+            }
+        );
     };
 }
 

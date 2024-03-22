@@ -1,15 +1,10 @@
 import Route from '@ember/routing/route';
-import { tracked } from '@glimmer/tracking';
+import { inject as service } from '@ember/service';
 
 export default class ExploreCategoryRoute extends Route {
-    @tracked category;
+    @service store;
 
-    model(params) {
-        this.category = params.category;
-    }
-
-    setupController(controller) {
-        super.setupController(...arguments);
-        controller.category = this.category;
+    model({ slug }) {
+        return this.store.queryRecord('category', { for: 'extension_category', core_category: 1, slug, single: 1 });
     }
 }

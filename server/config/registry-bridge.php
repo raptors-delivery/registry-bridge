@@ -12,5 +12,8 @@ return [
             'prefix' => '~registry',
             'internal_prefix' => 'v1'
         ],
+    ],
+    'registry' => [
+        'host' => env('REGISTRY_HOST', 'https://registry.fleetbase.io')
     ]
 ];

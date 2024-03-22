@@ -12,8 +12,8 @@ export default buildRoutes(function () {
         this.route('payments');
         this.route('credentials');
     });
-    this.route('explore', function () {
+    this.route('explore', { path: '/' }, function () {
         this.route('index', { path: '/' });
-        this.route('category', { path: '/:category' });
+        this.route('category', { path: '/:slug' });
     });
 });
