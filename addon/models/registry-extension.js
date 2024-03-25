@@ -8,16 +8,19 @@ export default class RegistryExtensionModel extends Model {
     @attr('string') company_uuid;
     @attr('string') created_by_uuid;
     @attr('string') registry_user_uuid;
-    @attr('string') latest_bundle_uuid;
+    @attr('string') current_bundle_uuid;
+    @attr('string') next_bundle_uuid;
     @attr('string') category_uuid;
     @attr('string') icon_uuid;
     @attr('string') public_id;
+    @attr('string') current_bundle_id;
 
     /** @relationships */
     @belongsTo('company') company;
-    @belongsTo('user') user;
+    @belongsTo('user') created_by;
     @belongsTo('category') category;
-    @belongsTo('file') latest_bundle;
+    @belongsTo('registry-extension-bundle') current_bundle;
+    @belongsTo('registry-extension-bundle') next_bundle;
     @belongsTo('file') icon;
     @hasMany('file') screenshots;
 
@@ -41,7 +44,8 @@ export default class RegistryExtensionModel extends Model {
     @attr('string', { defaultValue: '1.0.0' }) version;
     @attr('string') fa_icon;
     @attr('string') description;
-    @attr('string') latest_bundle_filename;
+    @attr('string') current_bundle_filename;
+    @attr('string') next_bundle_filename;
     @attr('string') promotional_text;
     @attr('string') website_url;
     @attr('string') repo_url;

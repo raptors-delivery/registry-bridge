@@ -1,0 +1,36 @@
+<Modal::Default @modalIsOpened={{@modalIsOpened}} @options={{@options}} @confirm={{@onConfirm}} @decline={{@onDecline}}>
+    {{#if this.bundles}}
+        <div class="next-table-wrapper auto-height">
+            <table>
+                <thead>
+                    <tr>
+                        <th {{set-width "175px"}}>ID</th>
+                        <th {{set-width "70px"}}>Bundle</th>
+                        <th {{set-width "80px"}}>Version</th>
+                        <th {{set-width "110px"}}>Uploaded</th>
+                        <th  {{set-width "100px"}}>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each this.bundles as |bundle|}}
+                        <tr>
+                            <td>{{bundle.bundle_id}}</td>
+                            <td>{{bundle.bundle_number}}</td>
+                            <td>{{bundle.version}}</td>
+                            <td>{{bundle.createdAgo}}</td>
+                            <td>
+                                <Badge @status={{bundle.status}} />
+                            </td>
+                            <td>
+                                <Button @text="Select" @size="xs" @type="primary" @onClick={{fn this.selectBundle bundle}} />
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    {{else}}
+        <div>No bundles uploaded.</div>
+    {{/if}}
+</Modal::Default>

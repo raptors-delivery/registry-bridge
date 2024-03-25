@@ -9,6 +9,7 @@ export default class ExtensionFormComponent extends Component {
     @service fetch;
     @service notifications;
     @service intl;
+    @service modalsManager;
     @tracked subscriptionModelOptions = ['flat_rate', 'tiered', 'usage'];
     @tracked billingPeriodOptions = ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'];
     @tracked uploadQueue = [];
@@ -98,8 +99,8 @@ export default class ExtensionFormComponent extends Component {
         this.fetch.uploadFile.perform(
             file,
             {
-                path: `uploads/extensions/${this.args.extension.id}/screenshots`,
-                subject_uuid: this.args.extension.id,
+                path: `uploads/extensions/${extension.id}/screenshots`,
+                subject_uuid: extension.id,
                 subject_type: 'registry-bridge:registry-extension',
                 type: 'extension_screenshot',
             },
@@ -118,6 +119,31 @@ export default class ExtensionFormComponent extends Component {
                 }
             }
         );
+    }
+
+    @action selectBundle() {
+        const { extension, onBundleSelected } = this.args;
+
+        this.modalsManager.show('modals/select-extension-bundle', {
+            title: 'Select extension bundle',
+            modalClass: 'modal-md',
+            acceptButtonText: 'Done',
+            hideDeclineButton: true,
+            extension,
+            onBundleSelected: (bundle) => {
+                extension.setProperties({
+                    next_bundle_uuid: bundle.id,
+                    next_bundle_filename: bundle.bundle_filename,
+                    next_bundle: bundle,
+                });
+
+                if (typeof onBundleSelected === 'function') {
+                    onBundleSelected(bundle);
+                }
+
+                this.modalsManager.done();
+            },
+        });
     }
 
     @action removeFile(file) {

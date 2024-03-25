@@ -42,37 +42,15 @@
                 </TagInput>
             </InputGroup>
         </ContentPanel>
-        <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.package-name"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
-            <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.package-json-name"}} @value={{@extension.package_name}} />
-            <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.composer-json-name"}} @value={{@extension.composer_name}} />
-        </ContentPanel>
         <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-bundle"}} @open={{true}} @pad={{false}} @panelBodyClass="bg-white dark:bg-gray-800">
-            <div class="flex flex-row items-center px-4 pb-4 pt-2">
-                <FileUpload @name={{t "registry-bridge.developers.extensions.extension-form.extension-upload-bundle"}} @accept={{join "," this.acceptedBundleTypes}} @onFileAdded={{perform this.uploadBundle}} as |queue|>
-                    <a tabindex={{0}} class="flex items-center px-0 mt-2 text-xs no-underline truncate btn btn-sm btn-default" disabled={{not queue.files.length}}>
-                        {{#if queue.files.length}}
-                            <div class="mr-1.5">
-                                <Spinner />
-                            </div>
-                            <span>
-                                {{t "common.uploading"}}
-                            </span>
-                        {{else}}
-                            <FaIcon @icon="box-archive" class="mr-1.5" />
-                            <span>
-                                {{t "registry-bridge.developers.extensions.extension-form.extension-upload-bundle"}}
-                            </span>
-                        {{/if}}
-                    </a>
-                </FileUpload>
-                <div>
-                    {{#if @extension.latest_bundle_uuid}}
-                        <div class="flex flex-row items-center mt-2 ml-2 bg-green-800 rounded-lg px-4 py-1 shadow-sm border-green-400">
-                            <FaIcon @icon="box-archive" @size="sm" class="text-green-200 mr-2" />
-                            <span class="text-green-200 text-sm font-mono">{{n-a @extension.latest_bundle_filename}}</span>
-                        </div>
-                    {{/if}}
-                </div>
+            <div class="px-4 pb-4 pt-3 flex flex-col flex-grow-0">
+                <Button @type="magic" @icon="box-archive" @text="Select Bundle" @onClick={{this.selectBundle}} />
+                {{#if @extension.next_bundle_filename}}
+                    <div class="mt-4 rounded-lg shadow-sm bg-gray-900 border border-gray-200 px-4 py-2 flex flex-row items-center text-xs text-gray-100">
+                        <FaIcon @icon="box-archive" @size="xs" />
+                        <span class="ml-2">{{@extension.next_bundle_filename}}</span>
+                    </div>
+                {{/if}}
             </div>
         </ContentPanel>
         <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-listing-details"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
@@ -88,33 +66,6 @@
                 <InputGroup @type="url" @name={{t "registry-bridge.developers.extensions.extension-form.extension-privacy-policy-url"}} @value={{@extension.privacy_policy_url}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-privacy-policy-url-help-text"}} @wrapperClass="mb-0i" />
                 <InputGroup @type="url" @name={{t "registry-bridge.developers.extensions.extension-form.extension-tos-url"}} @value={{@extension.tos_url}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-tos-url-help-text"}} @wrapperClass="mb-0i" />
             </div>
-        </ContentPanel>
-        <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-payment-details"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
-            <InputGroup @wrapperClass={{unless @extension.payment_required "mb-0i"}}>
-                <Toggle @isToggled={{@extension.payment_required}} @onToggle={{fn (mut @extension.payment_required)}} @label={{t "registry-bridge.developers.extensions.extension-form.extension-payment-required"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-payment-required-help-text"}} />
-            </InputGroup>
-            {{#if @extension.payment_required}}
-                <InputGroup>
-                    <Toggle @isToggled={{@extension.subscription_required}} @onToggle={{fn (mut @extension.subscription_required)}} @label={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required-help-text"}} />
-                </InputGroup>
-                {{#if @extension.subscription_required}}
-                    <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period-help-text"}}>
-                        <Select @value={{@extension.subscription_billing_period}} @options={{this.billingPeriodOptions}} @onSelect={{fn (mut @extension.subscription_billing_period)}} @placeholder={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period-placeholder"}} class="w-full" />
-                    </InputGroup>
-                    <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-amount"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-amount-help-text"}} @wrapperClass="mb-0i">
-                        <MoneyInput @value={{@extension.subscription_amount}} @currency="USD" />
-                    </InputGroup>
-                {{else}}
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
-                        <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-price"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-price-help-text"}}>
-                            <MoneyInput @value={{@extension.price}} @currency="USD" />
-                        </InputGroup>
-                        <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-sale-price"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-sale-price-help-text"}}>
-                            <MoneyInput @value={{@extension.sale_price}} @currency="USD" />
-                        </InputGroup>
-                    </div>
-                {{/if}}
-            {{/if}}
         </ContentPanel>
         <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-screenshots"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
             <div class="space-y-4">

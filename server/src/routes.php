@@ -31,6 +31,9 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                 $router->post('reject', $controller('reject'));
                 $router->get('download-bundle', $controller('downloadBundle'));
             });
+            $router->fleetbaseRoutes('registry-extension-bundles', function ($router, $controller) {
+                $router->get('download', $controller('download'));
+            });
         });
     }
 );

@@ -27,6 +27,10 @@ registry-bridge:
       create-new-extension: Create new Extension
       new-extension: New Extension
       extension: Extension
+      submission: Submission
+      details: Details
+      bundles: Bundles
+      monetize: Monetize
       explore:
         explore-extensions: Explore Extensions
         explore-category-extensions: >
@@ -94,3 +98,10 @@ registry-bridge:
         submit-for-review: Submit for Review
         extension-bundle: Extension Bundle
         extension-upload-bundle: Upload Extension Bundle
+        details: Details
+        bundle-id: Bundle ID
+        bundle-id-help-text: The identifier of the currently published bundle.
+        extension-id: Extension ID
+        extension-id-help-text: The unique identifier for this extension.
+        bundles: Bundles
+        upload-new-bundle: Upload new Bundle

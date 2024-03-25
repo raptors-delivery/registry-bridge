@@ -17,7 +17,8 @@ return new class extends Migration
             $table->uuid('company_uuid'); 
             $table->uuid('created_by_uuid')->nullable();
             $table->uuid('registry_user_uuid')->nullable();
-            $table->uuid('latest_bundle_uuid')->nullable();
+            $table->uuid('current_bundle_uuid')->nullable();
+            $table->uuid('next_bundle_uuid')->nullable();
             $table->uuid('icon_uuid')->nullable();
             $table->uuid('category_uuid')->nullable();
             $table->string('public_id')->nullable()->index();
@@ -58,7 +59,6 @@ return new class extends Migration
             $table->foreign('company_uuid')->references('uuid')->on('companies')->onDelete('cascade');
             $table->foreign('created_by_uuid')->references('uuid')->on('users')->onDelete('cascade');
             $table->foreign('registry_user_uuid')->references('uuid')->on('registry_users')->onDelete('cascade');
-            $table->foreign('latest_bundle_uuid')->references('uuid')->on('files')->onDelete('cascade');
             $table->foreign('icon_uuid')->references('uuid')->on('files')->onDelete('cascade');
             $table->foreign('category_uuid')->references('uuid')->on('categories')->onDelete('cascade');
         });

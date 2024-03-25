@@ -49,7 +49,8 @@ class RegistryExtension extends Model
         'created_by_uuid',
         'category_uuid',
         'registry_user_uuid',
-        'latest_bundle_uuid',
+        'current_bundle_uuid',
+        'next_bundle_uuid',
         'icon_uuid',
         'public_id',
         'name',
@@ -109,7 +110,10 @@ class RegistryExtension extends Model
      */
     protected $appends = [
         'icon_url',
-        'latest_bundle_filename',
+        'current_bundle_filename',
+        'current_bundle_id',
+        'next_bundle_filename',
+        'next_bundle_id',
     ];
 
     /**
@@ -127,7 +131,8 @@ class RegistryExtension extends Model
      * @var array
      */
     protected $without = [
-        'latest_bundle',
+        'current_bundle',
+        'next_bundle',
     ];
 
     /**
@@ -174,9 +179,17 @@ class RegistryExtension extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function latestBundle()
+    public function currentBundle()
     {
-        return $this->belongsTo(File::class, 'latest_bundle_uuid', 'uuid');
+        return $this->belongsTo(RegistryExtensionBundle::class, 'current_bundle_uuid', 'uuid');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function nextBundle()
+    {
+        return $this->belongsTo(RegistryExtensionBundle::class, 'next_bundle_uuid', 'uuid');
     }
 
     /**
@@ -208,6 +221,14 @@ class RegistryExtension extends Model
      */
     public function bundles()
     {
+        return $this->hasMany(RegistryExtensionBundle::class, 'extension+uuid', 'uuid');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function bundleFiles()
+    {
         return $this->hasMany(File::class, 'subject_uuid', 'uuid')->where('type', 'extension_bundle');
     }
 
@@ -226,17 +247,59 @@ class RegistryExtension extends Model
     }
 
     /**
-     * Get the latest bundle original filename.
+     * Get the current bundle public ID.
      *
      * @return string
      */
-    public function getLatestBundleFilenameAttribute()
+    public function getCurrentBundleIdAttribute()
     {
-        if ($this->latestBundle instanceof File) {
-            return $this->latestBundle->original_filename;
+        if ($this->currentBundle instanceof RegistryExtensionBundle) {
+            return $this->currentBundle->public_id;
         }
 
-        return data_get($this, 'latestBundle.original_filename');
+        return data_get($this, 'currentBundle.public_id');
+    }
+
+    /**
+     * Get the current bundle original filename.
+     *
+     * @return string
+     */
+    public function getCurrentBundleFilenameAttribute()
+    {
+        if ($this->currentBundle instanceof RegistryExtensionBundle) {
+            return $this->currentBundle->bundle_filename;
+        }
+
+        return data_get($this, 'currentBundle.bundle_filename');
+    }
+
+    /**
+     * Get the current bundle public ID.
+     *
+     * @return string
+     */
+    public function getNextBundleIdAttribute()
+    {
+        if ($this->nextBundle instanceof RegistryExtensionBundle) {
+            return $this->nextBundle->public_id;
+        }
+
+        return data_get($this, 'nextBundle.public_id');
+    }
+
+    /**
+     * Get the current bundle original filename.
+     *
+     * @return string
+     */
+    public function getNextBundleFilenameAttribute()
+    {
+        if ($this->nextBundle instanceof RegistryExtensionBundle) {
+            return $this->nextBundle->bundle_filename;
+        }
+
+        return data_get($this, 'nextBundle.bundle_filename');
     }
 
     /**

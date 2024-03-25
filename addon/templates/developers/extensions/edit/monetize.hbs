@@ -1,0 +1,29 @@
+<div class="flex-1">
+    <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-payment-details"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
+        <InputGroup @wrapperClass={{unless @model.payment_required "mb-0i"}}>
+            <Toggle @isToggled={{@model.payment_required}} @onToggle={{fn (mut @model.payment_required)}} @label={{t "registry-bridge.developers.extensions.extension-form.extension-payment-required"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-payment-required-help-text"}} />
+        </InputGroup>
+        {{#if @model.payment_required}}
+            <InputGroup>
+                <Toggle @isToggled={{@model.subscription_required}} @onToggle={{fn (mut @model.subscription_required)}} @label={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required-help-text"}} />
+            </InputGroup>
+            {{#if @model.subscription_required}}
+                <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period-help-text"}}>
+                    <Select @value={{@model.subscription_billing_period}} @options={{this.billingPeriodOptions}} @onSelect={{fn (mut @model.subscription_billing_period)}} @placeholder={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period-placeholder"}} class="w-full" />
+                </InputGroup>
+                <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-amount"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-amount-help-text"}} @wrapperClass="mb-0i">
+                    <MoneyInput @value={{@model.subscription_amount}} @currency="USD" />
+                </InputGroup>
+            {{else}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+                    <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-price"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-price-help-text"}}>
+                        <MoneyInput @value={{@model.price}} @currency="USD" />
+                    </InputGroup>
+                    <InputGroup @name={{t "registry-bridge.developers.extensions.extension-form.extension-sale-price"}} @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-sale-price-help-text"}}>
+                        <MoneyInput @value={{@model.sale_price}} @currency="USD" />
+                    </InputGroup>
+                </div>
+            {{/if}}
+        {{/if}}
+    </ContentPanel>
+</div>

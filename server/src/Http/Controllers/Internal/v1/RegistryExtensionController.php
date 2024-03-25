@@ -152,8 +152,11 @@ class RegistryExtensionController extends RegistryBridgeController
     {
         $id        = $request->input('id');
         $extension = RegistryExtension::find($id);
-        if ($extension && $extension->latestBundle) {
-            return Storage::disk($extension->latestBundle->disk)->download($extension->latestBundle->path, $extension->latestBundle->name);
+        if ($extension && $extension->currentBundle) {
+            $bundleFile = data_get($extension, 'currentBundle.bundle');
+            if ($bundleFile) {
+                return Storage::disk($bundleFile->disk)->download($bundleFile->path, $bundleFile->name);
+            }
         }
 
         return response()->error('Failed to download extension bundle');
