@@ -1,2 +1,22 @@
-<Layout::Section::Header @icon={{@model.icon}} @title={{t "registry-bridge.developers.extensions.explore.explore-category-extensions" categoryName=(smart-humanize @model.name)}} />
-{{outlet}}
+<Layout::Section::Header @searchQuery={{this.query}} @onSearch={{perform this.search}} @title={{t "registry-bridge.developers.extensions.explore.explore-extensions"}}  />
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    <div class="m-auto p-8">
+        <div class="flex flex-row space-x-4">
+            {{#each @model as |extension|}}
+                <div class="mb-4">
+                    <button type="button" class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50">
+                        <div class="flex items-center justify-center rounded-t-lg w-full h-36" {{background-url extension.icon_url overlay=true}}>
+                            <Image src={{extension.icon_url}} class="w-full h-36 rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
+                        </div>
+                        <div class="text-left px-3 py-2 rounded-b-lg bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900">
+                            <span class="font-semibold text-sm block">{{extension.name}}</span>
+                            <p class="text-xs">{{n-a extension.description}}</p>
+                        </div>
+                    </button>
+                </div>
+            {{/each}}
+        </div>
+    </div>
+    <Spacer @height="300px" />
+</Layout::Section::Body>

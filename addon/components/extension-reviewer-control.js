@@ -43,6 +43,7 @@ export default class ExtensionReviewerControlComponent extends Component {
             body: this.intl.t('registry-bridge.component.extension-reviewer-control.approve-confirm-body'),
             acceptButtonText: this.intl.t('registry-bridge.component.extension-reviewer-control.approve'),
             confirm: () => {
+                this.unfocusExtension();
                 return extension.approve().finally(() => {
                     this.getExtensionsPendingReview.perform();
                 });

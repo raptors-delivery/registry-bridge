@@ -55,36 +55,6 @@ export default class ExtensionFormComponent extends Component {
         );
     }
 
-    @task *uploadBundle(file) {
-        const { extension, onBundleUploaded } = this.args;
-
-        yield this.fetch.uploadFile.perform(
-            file,
-            {
-                path: `uploads/extensions/${this.args.extension.id}/bundles`,
-                subject_uuid: this.args.extension.id,
-                subject_type: 'registry-bridge:registry-extension',
-                type: 'extension_bundle',
-                meta: {
-                    version: this.args.extension.version,
-                },
-            },
-            (uploadedFile) => {
-                extension.setProperties({
-                    latest_bundle: uploadedFile,
-                    latest_bundle_uuid: uploadedFile.id,
-                    latest_bundle_filename: uploadedFile.original_filename,
-                });
-
-                if (typeof onBundleUploaded === 'function') {
-                    onBundleUploaded(uploadedFile);
-                }
-
-                return extension.save();
-            }
-        );
-    }
-
     @action queueFile(file) {
         // since we have dropzone and upload button within dropzone validate the file state first
         // as this method can be called twice from both functions
@@ -133,6 +103,7 @@ export default class ExtensionFormComponent extends Component {
             onBundleSelected: (bundle) => {
                 extension.setProperties({
                     next_bundle_uuid: bundle.id,
+                    next_bundle_id: bundle.bundle_id,
                     next_bundle_filename: bundle.bundle_filename,
                     next_bundle: bundle,
                 });

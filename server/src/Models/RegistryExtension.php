@@ -55,8 +55,6 @@ class RegistryExtension extends Model
         'public_id',
         'name',
         'subtitle',
-        'package_name',
-        'composer_name',
         'payment_required',
         'price',
         'sale_price',
@@ -112,8 +110,10 @@ class RegistryExtension extends Model
         'icon_url',
         'current_bundle_filename',
         'current_bundle_id',
+        'current_bundle_public_id',
         'next_bundle_filename',
         'next_bundle_id',
+        'next_bundle_public_id',
     ];
 
     /**
@@ -251,13 +251,27 @@ class RegistryExtension extends Model
      *
      * @return string
      */
-    public function getCurrentBundleIdAttribute()
+    public function getCurrentBundlePublicIdAttribute()
     {
         if ($this->currentBundle instanceof RegistryExtensionBundle) {
             return $this->currentBundle->public_id;
         }
 
         return data_get($this, 'currentBundle.public_id');
+    }
+
+    /**
+     * Get the current bundle ID.
+     *
+     * @return string
+     */
+    public function getCurrentBundleIdAttribute()
+    {
+        if ($this->currentBundle instanceof RegistryExtensionBundle) {
+            return $this->currentBundle->bundle_id;
+        }
+
+        return data_get($this, 'currentBundle.bundle_id');
     }
 
     /**
@@ -275,17 +289,31 @@ class RegistryExtension extends Model
     }
 
     /**
-     * Get the current bundle public ID.
+     * Get the next bundle public ID.
      *
      * @return string
      */
-    public function getNextBundleIdAttribute()
+    public function getNextBundlePublicIdAttribute()
     {
         if ($this->nextBundle instanceof RegistryExtensionBundle) {
             return $this->nextBundle->public_id;
         }
 
         return data_get($this, 'nextBundle.public_id');
+    }
+
+    /**
+     * Get the next bundle ID.
+     *
+     * @return string
+     */
+    public function getNextBundleIdAttribute()
+    {
+        if ($this->nextBundle instanceof RegistryExtensionBundle) {
+            return $this->nextBundle->bundle_id;
+        }
+
+        return data_get($this, 'nextBundle.bundle_id');
     }
 
     /**
@@ -303,20 +331,23 @@ class RegistryExtension extends Model
     }
 
     /**
-     * Retrieves a RegistryExtension instance by package name.
+     * Finds a RegistryExtension by package name in the associated currentBundle.
      *
-     * This static method searches for a `RegistryExtension` using a given package name. It checks both the
-     * 'package_name' and 'composer_name' fields in the database for a match with the provided package name.
-     * If a matching record is found, it returns the corresponding `RegistryExtension` instance. Otherwise,
-     * it returns null.
+     * This method searches for a RegistryExtension where the associated currentBundle's
+     * 'meta' JSON column contains the specified package name either in the 'api' field
+     * or the 'engine' field. It returns the first matching RegistryExtension or null
+     * if no matches are found. The method leverages Eloquent's relationship querying
+     * capabilities to efficiently filter the results.
      *
-     * @param string $packageName the package name used to search for the extension
+     * @param string $packageName the name of the package to search for in the 'api' or 'engine' fields
      *
-     * @return RegistryExtension|null returns the `RegistryExtension` instance if found, or null if no match is found
+     * @return RegistryExtension|null the first RegistryExtension that matches the search criteria, or null if no match is found
      */
     public static function findByPackageName(string $packageName): ?RegistryExtension
     {
-        return static::where('package_name', $packageName)->orWhere('composer_name', $packageName)->first();
+        return static::whereHas('currentBundle', function ($query) use ($packageName) {
+            $query->where('meta->package.json->name', $packageName)->orWhere('meta->composer.json->name', $packageName);
+        })->first();
     }
 
     /**
@@ -394,14 +425,14 @@ class RegistryExtension extends Model
             'category_uuid' => function ($value) {
                 return !empty($value);
             },
-            'latest_bundle_uuid' => function ($value) {
+            'next_bundle_uuid' => function ($value) {
                 return !empty($value);
             },
         ];
 
-        // Should have either composer_name or package_name
-        $hasPackageName = !empty($extension->composer_name) || !empty($extension->package_name);
-        if (!$hasPackageName) {
+        // Should have a new bundle for submission
+        $isNewBundle = $extension->next_bundle_uuid !== $extension->current_bundle_uuid;
+        if (!$isNewBundle) {
             return false;
         }
 

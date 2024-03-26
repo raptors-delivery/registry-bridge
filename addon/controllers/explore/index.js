@@ -2,8 +2,7 @@ import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
 import { task, timeout } from 'ember-concurrency';
 
-export default class ExploreCategoryController extends Controller {
-    @tracked category;
+export default class ExploreIndexController extends Controller {
     @tracked query;
 
     @task({ restartable: true }) *search(event) {

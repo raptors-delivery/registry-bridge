@@ -9,6 +9,7 @@ use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionBundleRequest;
 use Fleetbase\RegistryBridge\Http\Requests\RegistryExtensionActionRequest;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
 use Fleetbase\RegistryBridge\Models\RegistryExtensionBundle;
+use Fleetbase\Support\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -46,7 +47,8 @@ class RegistryExtensionBundleController extends RegistryBridgeController
         }
 
         // Get extension.json contents
-        $extensionJson = RegistryExtensionBundle::extractBundleFile($bundleFile);
+        $bundleData    = RegistryExtensionBundle::extractBundleData($bundleFile);
+        $extensionJson = Utils::getObjectKeyValue($bundleData, 'extension.json');
         if (!$extensionJson) {
             return response()->error('Unable to find `extension.json` file required in bundle.');
         }
@@ -75,7 +77,7 @@ class RegistryExtensionBundleController extends RegistryBridgeController
         // Make sure the extension ID is set
         $hasExtensionIdSet = isset($extensionJson->id) && RegistryExtension::where('public_id', $extensionJson->id)->exists();
         if (!$hasExtensionIdSet) {
-            return response()->json('Invalid extension ID set in `extension.json`, the ID must belong to the submission and be set.');
+            return response()->error('Invalid extension ID set in `extension.json`, the ID must belong to the submission and be set.');
         }
 
         try {
@@ -83,12 +85,7 @@ class RegistryExtensionBundleController extends RegistryBridgeController
 
             // Update the record version from extension json
             $record->update(['bundle_number' => $extensionJson->bundle_number, 'version' => $extensionJson->version]);
-
-            // Update the extension with required props
-            $record->extension()->update([
-                'package_name'  => $extensionJson->engine,
-                'composer_name' => $extensionJson->api,
-            ]);
+            $record->updateMetaProperties((array) $bundleData);
 
             return ['registryExtensionBundle' => new $this->resource($record)];
         } catch (\Throwable $e) {

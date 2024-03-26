@@ -23,8 +23,6 @@ return new class extends Migration
             $table->uuid('category_uuid')->nullable();
             $table->string('public_id')->nullable()->index();
             $table->string('name');
-            $table->string('package_name')->nullable();
-            $table->string('composer_name')->nullable();
             $table->string('subtitle')->nullable();
             $table->boolean('payment_required')->default(0);
             $table->integer('price')->nullable();

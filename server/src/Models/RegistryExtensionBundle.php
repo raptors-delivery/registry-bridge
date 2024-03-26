@@ -184,19 +184,21 @@ class RegistryExtensionBundle extends Model
     }
 
     /**
-     * Extracts a specified file from a zipped bundle file.
+     * Extracts specified file(s) from a zipped bundle and returns their contents.
      *
-     * This method downloads the file indicated by the File model,
-     * unzips it, and looks for a specified filename within the unzipped contents.
-     * If the file is found, its contents are returned as a stdClass object.
+     * This method downloads a file indicated by the File model, unzips it, and looks for
+     * specified filename(s) within the unzipped contents. The contents of each found file
+     * are returned as a stdClass object, with each property corresponding to a filename.
+     * If 'parse_json' option is true (default), file contents are decoded as JSON.
      * Temporary files are cleaned up after extraction.
      *
-     * @param File   $bundle   the File model instance representing the zipped bundle
-     * @param string $filename The name of the file to extract from the bundle (default: 'extension.json').
+     * @param File         $bundle    the File model instance representing the zipped bundle
+     * @param string|array $filenames a single filename or an array of filenames to extract from the bundle
+     * @param array        $options   Additional options, e.g., ['parse_json' => false] to get raw file contents.
      *
-     * @return \stdClass|null the decoded JSON object from the specified file, or null if not found
+     * @return \stdClass|null an object containing the contents of each extracted file, or null if files are not found
      */
-    protected static function extractBundleFile(File $bundle, string $filename = 'extension.json', $options = []): ?\stdClass
+    protected static function extractBundleFile(File $bundle, $filenames = 'extension.json', $options = []): ?\stdClass
     {
         $shouldParseJson = data_get($options, 'parse_json', true);
         $tempDir         = sys_get_temp_dir() . '/' . str_replace(['.', ','], '_', uniqid('fleetbase_zip_', true));
@@ -207,59 +209,115 @@ class RegistryExtensionBundle extends Model
         $contents     = Storage::disk($bundle->disk)->get($bundle->path);
         file_put_contents($tempFilePath, $contents);
 
-        // Unzip the file
-        $extractedFilePath = static::_extractAndFindFile($tempFilePath, $tempDir, $filename);
-        if (file_exists($extractedFilePath)) {
-            $fileContents = file_get_contents($extractedFilePath);
+        // Extract file paths
+        $extractedFilePaths = static::_extractAndFindFile($tempFilePath, $tempDir, $filenames);
 
-            // Cleanup: Delete the temporary directory
-            // Make sure to handle this part carefully to avoid any unintended deletion
-            array_map('unlink', glob("$tempDir/*.*"));
-            Utils::deleteDirectory($tempDir);
-
-            if ($shouldParseJson) {
-                return json_decode($fileContents);
+        $result = new \stdClass();
+        foreach ($extractedFilePaths as $filename => $path) {
+            if (file_exists($path)) {
+                $fileContents = file_get_contents($path);
+                if ($shouldParseJson) {
+                    $result->$filename = json_decode($fileContents);
+                } else {
+                    $result->$filename = $fileContents;
+                }
             }
-
-            return $fileContents;
         }
 
-        // Cleanup if 'extension.json' is not found
+        // Cleanup: Delete the temporary directory
         array_map('unlink', glob("$tempDir/*.*"));
         Utils::deleteDirectory($tempDir);
 
-        return null;
+        return $result;
     }
 
-    private static function _extractAndFindFile($zipFilePath, $tempDir, $targetFile = 'extension.json')
+    /**
+     * Extracts and finds the path(s) of specified file(s) within a zipped archive.
+     *
+     * Opens the specified ZIP archive and extracts it to a temporary directory. It then
+     * searches for the given file(s) in both the root and the first valid subdirectory of
+     * the unzipped content. It returns an associative array of file paths, indexed by filenames.
+     * Invalid directories such as '__MACOSX', '.', '..', etc., are excluded from the search.
+     *
+     * @param string       $zipFilePath path to the ZIP archive file
+     * @param string       $tempDir     temporary directory where the ZIP file is extracted
+     * @param string|array $targetFiles a single filename or an array of filenames to search for within the archive
+     *
+     * @return array associative array of paths for the requested files within the archive
+     */
+    private static function _extractAndFindFile($zipFilePath, $tempDir, $targetFiles)
     {
-        $zip = new \ZipArchive();
+        $paths = [];
+        $zip   = new \ZipArchive();
 
         if ($zip->open($zipFilePath) === true) {
             $zip->extractTo($tempDir);
             $zip->close();
 
-            // Direct check in the tempDir
-            $directPath = $tempDir . '/' . $targetFile;
-            if (file_exists($directPath)) {
-                return $directPath;
-            }
+            foreach ((array) $targetFiles as $targetFile) {
+                // Direct check in the tempDir
+                $directPath = $tempDir . '/' . $targetFile;
+                if (file_exists($directPath)) {
+                    $paths[$targetFile] = $directPath;
+                    continue;
+                }
 
-            // Check in the first subdirectory
-            $files = scandir($tempDir);
-            foreach ($files as $file) {
-                $invalidDirectories = ['__MACOSX', '.', '..', 'DS_Store', '.DS_Store', '.idea', '.vscode'];
-                if (!Str::startsWith($file, ['.', '_']) && !in_array($file, $invalidDirectories) && is_dir($tempDir . '/' . $file)) {
-                    $nestedPath = $tempDir . '/' . $file . '/' . $targetFile;
-                    if (file_exists($nestedPath)) {
-                        return $nestedPath;
+                // Check in the first subdirectory
+                $files = scandir($tempDir);
+                foreach ($files as $file) {
+                    $invalidDirectories = ['__MACOSX', '.', '..', 'DS_Store', '.DS_Store', '.idea', '.vscode'];
+                    if (!Str::startsWith($file, ['.', '_']) && !in_array($file, $invalidDirectories) && is_dir($tempDir . '/' . $file)) {
+                        $nestedPath = $tempDir . '/' . $file . '/' . $targetFile;
+                        if (file_exists($nestedPath)) {
+                            $paths[$targetFile] = $nestedPath;
+                            break;
+                        }
                     }
-                    break;
                 }
             }
         }
 
-        return null;
+        return $paths;
+    }
+
+    /**
+     * Extracts multiple configuration files from the bundle.
+     *
+     * This method leverages the extractBundleFile function to extract an array
+     * of specified configuration files ('extension.json', 'composer.json', 'package.json')
+     * from the bundle. It returns an object containing the contents of each file,
+     * where each property name corresponds to a filename. If a specified file is not found
+     * in the bundle, its corresponding property will be absent in the returned object.
+     * The method is useful for retrieving multiple configuration files in a single operation.
+     *
+     * @return \stdClass|null An object containing the contents of each extracted file.
+     *                        Properties of the object correspond to the filenames.
+     *                        Returns null if the bundle property is not an instance of File.
+     */
+    public static function extractBundleData(File $bundleFile): ?\stdClass
+    {
+        return static::extractBundleFile($bundleFile, ['extension.json', 'composer.json', 'package.json']);
+    }
+
+    /**
+     * Extracts multiple configuration files from the bundle.
+     *
+     * This method leverages the extractBundleFile function to extract an array
+     * of specified configuration files ('extension.json', 'composer.json', 'package.json')
+     * from the bundle. It returns an object containing the contents of each file,
+     * where each property name corresponds to a filename. If a specified file is not found
+     * in the bundle, its corresponding property will be absent in the returned object.
+     * The method is useful for retrieving multiple configuration files in a single operation.
+     *
+     * @return \stdClass|null An object containing the contents of each extracted file.
+     *                        Properties of the object correspond to the filenames.
+     *                        Returns null if the bundle property is not an instance of File.
+     */
+    public function extractExtensionData()
+    {
+        if ($this->bundle instanceof File) {
+            return static::extractBundleData($this->bundle);
+        }
     }
 
     /**
@@ -273,8 +331,11 @@ class RegistryExtensionBundle extends Model
      */
     public function extractExtensionJson(): ?\stdClass
     {
+        $filename = 'extension.json';
         if ($this->bundle instanceof File) {
-            return static::extractBundleFile($this->bundle);
+            $data = static::extractBundleFile($this->bundle);
+
+            return Utils::getObjectKeyValue($data, $filename);
         }
     }
 
@@ -289,8 +350,11 @@ class RegistryExtensionBundle extends Model
      */
     public function extractComposerJson(): ?\stdClass
     {
+        $filename = 'composer.json';
         if ($this->bundle instanceof File) {
-            return static::extractBundleFile($this->bundle, 'composer.json');
+            $data = static::extractBundleFile($this->bundle, $filename);
+
+            return Utils::getObjectKeyValue($data, $filename);
         }
     }
 
@@ -305,8 +369,11 @@ class RegistryExtensionBundle extends Model
      */
     public function extractPackageJson(): ?\stdClass
     {
+        $filename = 'package.json';
         if ($this->bundle instanceof File) {
-            return static::extractBundleFile($this->bundle, 'package.json');
+            $data = static::extractBundleFile($this->bundle, $filename);
+
+            return Utils::getObjectKeyValue($data, $filename);
         }
     }
 }

@@ -13,7 +13,10 @@ export default class RegistryExtensionModel extends Model {
     @attr('string') category_uuid;
     @attr('string') icon_uuid;
     @attr('string') public_id;
+    @attr('string') current_bundle_public_id;
+    @attr('string') next_bundle_public_id;
     @attr('string') current_bundle_id;
+    @attr('string') next_bundle_id;
 
     /** @relationships */
     @belongsTo('company') company;
@@ -28,8 +31,6 @@ export default class RegistryExtensionModel extends Model {
     @attr('string', { defaultValue: 'https://flb-assets.s3.ap-southeast-1.amazonaws.com/static/default-extension-icon.svg' }) icon_url;
     @attr('string') name;
     @attr('string') subtitle;
-    @attr('string') package_name;
-    @attr('string') composer_name;
     @attr('boolean') payment_required;
     @attr('string') price;
     @attr('string') sale_price;

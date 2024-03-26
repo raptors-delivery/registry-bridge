@@ -33,7 +33,7 @@
             <div class="flex items-center mb-4 px-1">
                 <Button @type="primary" @size="sm" @icon="check" @text={{t "common.done"}} @onClick={{this.unfocusExtension}} class="w-full" />
             </div>
-            <ExtensionForm @extension={{this.focusedExtension}} />
+            <ExtensionForm @extension={{this.focusedExtension}} @withMonetizeForm={{true}} />
         </ContentPanel>
     {{/if}}
 </div>

@@ -67,7 +67,8 @@ class RegistryExtensionController extends RegistryBridgeController
         $id        = $request->input('id');
         $extension = RegistryExtension::find($id);
         if ($extension) {
-            $extension->update(['status' => 'approved']);
+            $extension->update(['status' => 'approved', 'current_bundle_uuid' => $extension->next_bundle_uuid]);
+            $extension->nextBundle()->update(['status' => 'approved']);
         } else {
             return response()->error('Unable to find extension for approval.');
         }
@@ -96,6 +97,7 @@ class RegistryExtensionController extends RegistryBridgeController
         $extension = RegistryExtension::find($id);
         if ($extension) {
             $extension->update(['status' => 'rejected']);
+            $extension->nextBundle()->update(['status' => 'rejected']);
         } else {
             return response()->error('Unable to find extension for rejection.');
         }
@@ -152,8 +154,8 @@ class RegistryExtensionController extends RegistryBridgeController
     {
         $id        = $request->input('id');
         $extension = RegistryExtension::find($id);
-        if ($extension && $extension->currentBundle) {
-            $bundleFile = data_get($extension, 'currentBundle.bundle');
+        if ($extension && $extension->nextBundle) {
+            $bundleFile = data_get($extension, 'nextBundle.bundle');
             if ($bundleFile) {
                 return Storage::disk($bundleFile->disk)->download($bundleFile->path, $bundleFile->name);
             }

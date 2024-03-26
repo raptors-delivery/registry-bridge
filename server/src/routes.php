@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('~registry/test', 'Fleetbase\RegistryBridge\Http\Controllers\Internal\v1\RegistryAuthController@test');
+
 Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware(['fleetbase.registry'])->namespace('Fleetbase\RegistryBridge\Http\Controllers')->group(
     function ($router) {
         /*

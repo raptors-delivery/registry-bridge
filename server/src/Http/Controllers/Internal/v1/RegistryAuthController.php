@@ -10,10 +10,16 @@ use Fleetbase\RegistryBridge\Http\Requests\RegistryAuthRequest;
 use Fleetbase\RegistryBridge\Http\Resources\RegistryUser as RegistryUserResource;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
 use Fleetbase\RegistryBridge\Models\RegistryUser;
+use Fleetbase\RegistryBridge\Support\Bridge;
 use Fleetbase\Support\Auth;
 
 class RegistryAuthController extends Controller
 {
+    public function test()
+    {
+        dd(Bridge::get('~/flb/extensions'));
+    }
+
     /**
      * Authenticates a registry user based on provided credentials.
      *
@@ -179,8 +185,10 @@ class RegistryAuthController extends Controller
         // Change status to published
         if ($action === 'publish') {
             $extension->update(['status' => 'published']);
+            $extension->currentBundle()->update(['status' => 'published']);
         } elseif ($action === 'unpublish') {
             $extension->update(['status' => 'unpublished']);
+            $extension->currentBundle()->update(['status' => 'unpublished']);
         }
 
         // Passed all checks

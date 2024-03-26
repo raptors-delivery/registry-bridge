@@ -8,7 +8,7 @@
                         <th {{set-width "70px"}}>Bundle</th>
                         <th {{set-width "80px"}}>Version</th>
                         <th {{set-width "110px"}}>Uploaded</th>
-                        <th  {{set-width "100px"}}>Status</th>
+                        <th {{set-width "100px"}}>Status</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -23,7 +23,14 @@
                                 <Badge @status={{bundle.status}} />
                             </td>
                             <td>
-                                <Button @text="Select" @size="xs" @type="primary" @onClick={{fn this.selectBundle bundle}} />
+                                {{#if (eq this.extension.next_bundle_uuid bundle.id)}}
+                                    <div class="flex flex-row items-center text-xs">
+                                        <FaIcon @icon="check" class="text-green-500" @size="md" />
+                                        <span class="ml-2 text-green-400">Selected</span>
+                                    </div>
+                                {{else}}
+                                    <Button @text="Select" @size="xs" @type="primary" @onClick={{fn this.selectBundle bundle}} />
+                                {{/if}}
                             </td>
                         </tr>
                     {{/each}}

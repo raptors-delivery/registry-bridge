@@ -18,6 +18,8 @@ export default class DevelopersExtensionsEditController extends Controller {
             const isReady = this.validateExtensionForReview();
             if (isReady === true) {
                 this.isReady = isReady;
+            } else if (isArray(isReady) && isReady.length) {
+                this.notifications.warning(isReady[0]);
             }
         } catch (error) {
             this.notifications.warning(error.message);
@@ -73,7 +75,7 @@ export default class DevelopersExtensionsEditController extends Controller {
             support_url: defaultValidationFn,
             privacy_policy_url: defaultValidationFn,
             icon_uuid: defaultValidationFn,
-            latest_bundle_uuid: defaultValidationFn,
+            next_bundle_uuid: defaultValidationFn,
             category_uuid: defaultValidationFn,
         };
     }
@@ -82,15 +84,15 @@ export default class DevelopersExtensionsEditController extends Controller {
         const extension = this.model;
         const validations = this.getValidations();
         const errors = [];
-        const hasPackageName = !isBlank(extension.package_name) || !isBlank(extension.composer_name);
-        if (!hasPackageName) {
-            return ['Extension is missing package name.'];
+        // next bundle and current bundle id cannot be equal
+        if (extension.next_bundle_uuid === extension.current_bundle_uuid) {
+            return ['New bundle must be selected fo review.'];
         }
 
         Object.keys(validations).forEach((property) => {
             const isValid = validations[property](extension.get(property));
             if (!isValid) {
-                errors.push(`${humanize(property)} is invalid.`);
+                errors.push(`${humanize(property)} is required for submission.`);
             }
         });
 
