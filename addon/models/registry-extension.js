@@ -1,6 +1,7 @@
 import Model, { attr, belongsTo, hasMany } from '@ember-data/model';
-import { action } from '@ember/object';
+import { action, computed } from '@ember/object';
 import { getOwner } from '@ember/application';
+import { format as formatDate, formatDistanceToNow, isValid as isValidDate } from 'date-fns';
 
 export default class RegistryExtensionModel extends Model {
     /** @ids */
@@ -31,6 +32,8 @@ export default class RegistryExtensionModel extends Model {
     @attr('string', { defaultValue: 'https://flb-assets.s3.ap-southeast-1.amazonaws.com/static/default-extension-icon.svg' }) icon_url;
     @attr('string') name;
     @attr('string') subtitle;
+    @attr('string') category_name;
+    @attr('string') publisher_name;
     @attr('boolean') payment_required;
     @attr('string') price;
     @attr('string') sale_price;
@@ -65,6 +68,39 @@ export default class RegistryExtensionModel extends Model {
     @attr('date') created_at;
     @attr('date') updated_at;
     @attr('date') deleted_at;
+
+    /** @computed */
+    @computed('updated_at') get updatedAgo() {
+        if (!isValidDate(this.updated_at)) {
+            return null;
+        }
+
+        return formatDistanceToNow(this.updated_at);
+    }
+
+    @computed('updated_at') get updatedAt() {
+        if (!isValidDate(this.updated_at)) {
+            return null;
+        }
+
+        return formatDate(this.updated_at, 'MMMM, dd yyyy');
+    }
+
+    @computed('created_at') get createdAgo() {
+        if (!isValidDate(this.created_at)) {
+            return null;
+        }
+
+        return formatDistanceToNow(this.created_at);
+    }
+
+    @computed('created_at') get createdAt() {
+        if (!isValidDate(this.created_at)) {
+            return null;
+        }
+
+        return formatDate(this.created_at, 'MMMM, dd yyyy');
+    }
 
     /** @methods */
     /**
@@ -116,7 +152,33 @@ export default class RegistryExtensionModel extends Model {
         const owner = getOwner(this);
         const fetch = owner.lookup('service:fetch');
 
-        return fetch.download(`registry-extensions/download-bundle`, { id: this.id }, { namespace: '~registry/v1', fileName: this.latest_bundle_filename, mimeType: 'application/x-zip' });
+        return fetch.download('registry-extensions/download-bundle', { id: this.id }, { namespace: '~registry/v1', fileName: this.latest_bundle_filename, mimeType: 'application/x-zip' });
+    }
+
+    /**
+     * Install the extension.
+     *
+     * @return {Promise<>}
+     * @memberof RegistryExtensionModel
+     */
+    @action install() {
+        const owner = getOwner(this);
+        const fetch = owner.lookup('service:fetch');
+
+        return fetch.post('installer/install', { extension: this.public_id }, { namespace: '~registry/v1' });
+    }
+
+    /**
+     * Uninstall the extension.
+     *
+     * @return {Promise<>}
+     * @memberof RegistryExtensionModel
+     */
+    @action uninstall() {
+        const owner = getOwner(this);
+        const fetch = owner.lookup('service:fetch');
+
+        return fetch.post('installer/uninstall', { extension: this.public_id }, { namespace: '~registry/v1' });
     }
 
     /**

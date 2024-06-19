@@ -40,8 +40,11 @@ class RegistryAuthController extends Controller
         $password = $request->input('password');
 
         // Find user by email or username
-        $user = User::where('email', $identity)->orWhere('username', $identity)->first();
+        $user = User::where(function ($query) use ($identity) {
+            $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
+        })->first();
 
+        // Authenticate user with password
         if (Auth::isInvalidPassword($password, $user->password)) {
             return response()->error('Invalid credentials.', 401);
         }
@@ -85,21 +88,27 @@ class RegistryAuthController extends Controller
         $password    = $request->input('password');
 
         // Find user by email or username
-        $user = User::where('email', $identity)->orWhere('username', $identity)->first();
+        $user = User::where(function ($query) use ($identity) {
+            $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
+        })->first();
 
         // Authenticate user with password
         if (Auth::isInvalidPassword($password, $user->password)) {
             return response()->error('Invalid credentials.', 401);
         }
 
-        // Create registry user
-        $registryUser = RegistryUser::create([
-            'company_uuid' => $user->company_uuid,
-            'user_uuid'    => $user->uuid,
-            'scope'        => '*',
-            'expires_at'   => now()->addYear(),
-            'name'         => $user->public_id . ' developer token',
-        ]);
+        // Check if registry user already exists first
+        $registryUser = RegistryUser::where(['company_uuid' => $user->company_uuid, 'user_uuid' => $user->uuid])->first();
+        if (!$registryUser) {
+            // Create registry user
+            $registryUser = RegistryUser::create([
+                'company_uuid' => $user->company_uuid,
+                'user_uuid'    => $user->uuid,
+                'scope'        => '*',
+                'expires_at'   => now()->addYear(),
+                'name'         => $user->public_id . ' developer token',
+            ]);
+        }
 
         return response()->json($registryUser);
     }

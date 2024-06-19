@@ -29,6 +29,8 @@ class RegistryExtensionFilter extends Filter
     public function explore()
     {
         $this->builder->where('status', 'published');
+        $this->builder->without(['current_bundle', 'next_bundle', 'category']);
+        $this->builder->with(['screenshots']);
     }
 
     public function category($category)

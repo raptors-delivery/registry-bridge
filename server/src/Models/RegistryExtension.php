@@ -114,6 +114,8 @@ class RegistryExtension extends Model
         'next_bundle_filename',
         'next_bundle_id',
         'next_bundle_public_id',
+        'category_name',
+        'publisher_name',
     ];
 
     /**
@@ -233,6 +235,14 @@ class RegistryExtension extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function installs()
+    {
+        return $this->hasMany(RegistryExtensionInstall::class, 'extension_uuid', 'uuid');
+    }
+
+    /**
      * Get avatar URL attribute.
      *
      * @return string
@@ -328,6 +338,34 @@ class RegistryExtension extends Model
         }
 
         return data_get($this, 'nextBundle.bundle_filename');
+    }
+
+    /**
+     * Get the extension's category.
+     *
+     * @return string
+     */
+    public function getCategoryNameAttribute()
+    {
+        if ($this->category instanceof Category) {
+            return $this->category->name;
+        }
+
+        return data_get($this, 'category.name');
+    }
+
+    /**
+     * Get the extension's category.
+     *
+     * @return string
+     */
+    public function getPublisherNameAttribute()
+    {
+        if ($this->company instanceof Company) {
+            return $this->company->name;
+        }
+
+        return data_get($this, 'company.name');
     }
 
     /**

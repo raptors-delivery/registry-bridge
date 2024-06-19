@@ -51,6 +51,30 @@ class RegistryExtensionController extends RegistryBridgeController
     }
 
     /**
+     * Display a list of installed extensions for the current company.
+     *
+     * This function retrieves all extensions that are installed for the company
+     * identified by the `company_uuid` stored in the session. It disables the cache
+     * for the `RegistryExtension` model to ensure fresh data is fetched from the database.
+     *
+     * The extensions are filtered based on their association with any installation
+     * record that matches the `company_uuid` from the session. The resulting collection
+     * of installed extensions is then wrapped and returned as a resource collection.
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection the collection of installed extensions wrapped as a resource
+     */
+    public function installed()
+    {
+        $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
+            $query->where('company_uuid', session('company'));
+        })->get();
+
+        $this->resource::wrap('registryExtensions');
+
+        return $this->resource::collection($installedExtensions);
+    }
+
+    /**
      * Approves a specific extension by its ID.
      *
      * This function locates a `RegistryExtension` using the provided ID and sets its status to 'approved'.

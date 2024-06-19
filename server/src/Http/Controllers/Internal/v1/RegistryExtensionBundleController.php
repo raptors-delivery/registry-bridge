@@ -53,25 +53,14 @@ class RegistryExtensionBundleController extends RegistryBridgeController
             return response()->error('Unable to find `extension.json` file required in bundle.');
         }
 
-        // Check if bundle number is set
-        if (!isset($extensionJson->bundle_number)) {
-            return response()->error('No `bundle_number` set in the `extension.json`');
-        }
-
         // Check if version is set
-        if (!isset($extensionJson->bundle_number)) {
+        if (!isset($extensionJson->version)) {
             return response()->error('No `version` set in the `extension.json`');
         }
 
         // Check if either api or engine property is set
-        if (!isset($extensionJson->engine) || !isset($extensionJson->api)) {
+        if (!isset($extensionJson->engine) && !isset($extensionJson->api)) {
             return response()->error('No `api` or `engine` property set in the `extension.json`');
-        }
-
-        // Make sure bundle number and version doesn't exist already
-        $isNotUniqueBundle = RegistryExtensionBundle::where(['bundle_number' => $extensionJson->bundle_number, 'version' => $extensionJson->version])->exists();
-        if ($isNotUniqueBundle) {
-            return response()->error('Bundle with number `' . $extensionJson->bundle_number . '` and version `' . $extensionJson->version . '` already exists.');
         }
 
         // Make sure the extension ID is set
@@ -79,6 +68,12 @@ class RegistryExtensionBundleController extends RegistryBridgeController
         if (!$hasExtensionIdSet) {
             return response()->error('Invalid extension ID set in `extension.json`, the ID must belong to the submission and be set.');
         }
+
+        // Set bundle number
+        $numberOfBundles = RegistryExtensionBundle::whereHas('extension', function ($query) use ($extensionJson) {
+            $query->where('public_id', $extensionJson->id);
+        })->count();
+        $extensionJson->bundle_number = ($numberOfBundles ?? 0) + 1;
 
         try {
             $record = $this->model->createRecordFromRequest($request);

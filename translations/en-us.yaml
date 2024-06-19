@@ -1,5 +1,13 @@
 registry-bridge:
   extension-name: Registry Bridge
+  common:
+    install: Install
+    uninstall: Uninstall
+    approve: Approve
+    reject: Reject
+    details: Details
+    about: About
+    about-extension: About {extensionName}
   component:
     extension-pending-publish-viewer:
       content-panel-title: Extensions Pending Publish
@@ -21,6 +29,8 @@ registry-bridge:
       approve: Approve
       reject: Reject
       no-extensions-awaiting-review: No extensions awaiting review
+  installed:
+    title: Installed Extensions
   developers:
     extensions:
       extensions: Extensions

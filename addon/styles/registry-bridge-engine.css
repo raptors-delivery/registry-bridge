@@ -2,3 +2,63 @@
     margin: auto;
     padding: 2rem 2.25rem;
 }
+
+.flb--modal.flb--default-modal > .flb--modal-dialog > .flb--modal-content > .flb--modal-header,
+.flb--modal.flb--default-modal > .flb--modal-dialog > .flb--modal-content > .flb--modal-header.flb--extension-modal-header {
+    align-items: start;
+    padding-bottom: 0;
+}
+
+.modal-title--extension-icon-wrapper {
+    width: 5rem;
+    height: 5rem;
+    margin-right: 0.75rem;
+}
+
+.flb--extension-tag {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 0.375rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.flb--modal.flb--extension-modal > .flb--modal-dialog > .flb--modal-content > .flb--modal-body > .modal-body-container {
+    padding-top: 0;
+}
+
+.flb--extension-screenshots-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.flb--extension-screenshot {
+    width: 150px;
+    height: 85px;
+    border: 3px #fff solid;
+    border-radius: 0.5rem;
+    margin-right: 1rem;
+}
+
+body[data-theme='dark'] .flb--extension-screenshot {
+    border: 3px #202a37 solid;
+}
+
+.flb--extension-screenshot-lightbox {
+    position: absolute;
+    z-index: 999999;
+    inset: 0;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(0 0 0 / 45%);
+}
+
+.flb--extension-screenshot-lightbox > .flb--extension-screenshot {
+    width: 600px;
+    height: 350px;
+    box-shadow:
+        0 10px 15px -3px rgb(0 0 0 / 10%),
+        0 4px 6px -4px rgb(0 0 0 / 10%);
+}

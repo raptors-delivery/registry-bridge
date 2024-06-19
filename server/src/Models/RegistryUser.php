@@ -125,7 +125,7 @@ class RegistryUser extends Model
      *
      * @return string the unique, generated token
      */
-    public static function generateToken(int $length = 36): string
+    public static function generateToken(int $length = 18): string
     {
         do {
             // Generate a random string and prepend with 'flb_'

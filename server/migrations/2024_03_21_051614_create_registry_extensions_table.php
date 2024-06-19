@@ -51,6 +51,9 @@ return new class extends Migration
             $table->json('meta')->nullable();
             $table->boolean('core_extension')->default(0);
             $table->string('status')->default('pending'); // pending, in_review, rejected, published
+            $table->timestamp('published_at')->nullable();
+            $table->timestamp('accepted_at')->nullable();
+            $table->timestamp('rejected_at')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

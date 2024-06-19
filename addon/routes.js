@@ -1,6 +1,7 @@
 import buildRoutes from 'ember-engines/routes';
 
 export default buildRoutes(function () {
+    this.route('installed');
     this.route('developers', function () {
         this.route('extensions', function () {
             this.route('index', { path: '/' });

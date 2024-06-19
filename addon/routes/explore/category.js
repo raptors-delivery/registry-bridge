@@ -1,24 +1,27 @@
 import Route from '@ember/routing/route';
 import { inject as service } from '@ember/service';
-import { tracked } from '@glimmer/tracking';
 
 export default class ExploreCategoryRoute extends Route {
     @service store;
-    @tracked categorySlug;
 
     queryParams = {
         query: {
-            refreshModel: true,
+            refreshModel: false,
         },
     };
 
-    model({ slug, query }) {
-        this.categorySlug = slug;
-        return this.store.query('registry-extension', { explore: 1, category: slug, query });
+    model({ slug }) {
+        return this.store.queryRecord('category', { slug, for: 'extension_category', core_category: 1, single: 1 });
     }
 
-    async setupController(controller) {
+    async setupController(controller, model) {
         super.setupController(...arguments);
-        controller.category = await this.store.queryRecord('category', { slug: this.categorySlug, for: 'extension_category', core_category: 1, single: 1 });
+        const params = { explore: 1, category: model.id };
+        const query = controller.query;
+        if (query) {
+            params.query = controller.query;
+        }
+
+        controller.extensions = await this.store.query('registry-extension', params);
     }
 }

@@ -7,6 +7,8 @@ use Fleetbase\Models\Company;
 use Fleetbase\Models\File;
 use Fleetbase\Models\Model;
 use Fleetbase\Models\User;
+use Fleetbase\RegistryBridge\Exceptions\InstallFailedException;
+use Fleetbase\Support\SocketCluster\SocketClusterService;
 use Fleetbase\Support\Utils;
 use Fleetbase\Traits\HasApiModelBehavior;
 use Fleetbase\Traits\HasMetaAttributes;
@@ -16,6 +18,7 @@ use Fleetbase\Traits\Searchable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use stdClass;
+use Symfony\Component\Process\Process;
 
 class RegistryExtensionBundle extends Model
 {
@@ -211,8 +214,7 @@ class RegistryExtensionBundle extends Model
 
         // Extract file paths
         $extractedFilePaths = static::_extractAndFindFile($tempFilePath, $tempDir, $filenames);
-
-        $result = new \stdClass();
+        $result             = new \stdClass();
         foreach ($extractedFilePaths as $filename => $path) {
             if (file_exists($path)) {
                 $fileContents = file_get_contents($path);
@@ -225,7 +227,11 @@ class RegistryExtensionBundle extends Model
         }
 
         // Cleanup: Delete the temporary directory
-        array_map('unlink', glob("$tempDir/*.*"));
+        try {
+            array_map('unlink', glob("$tempDir/*.*"));
+        } catch (\Throwable $e) {
+            // Probably a directory ...
+        }
         Utils::deleteDirectory($tempDir);
 
         return $result;
@@ -335,7 +341,7 @@ class RegistryExtensionBundle extends Model
         if ($this->bundle instanceof File) {
             $data = static::extractBundleFile($this->bundle);
 
-            return Utils::getObjectKeyValue($data, $filename);
+            return $data[$filename];
         }
     }
 
@@ -354,7 +360,7 @@ class RegistryExtensionBundle extends Model
         if ($this->bundle instanceof File) {
             $data = static::extractBundleFile($this->bundle, $filename);
 
-            return Utils::getObjectKeyValue($data, $filename);
+            return $data[$filename];
         }
     }
 
@@ -373,7 +379,338 @@ class RegistryExtensionBundle extends Model
         if ($this->bundle instanceof File) {
             $data = static::extractBundleFile($this->bundle, $filename);
 
-            return Utils::getObjectKeyValue($data, $filename);
+            return $data[$filename];
+        }
+    }
+
+    /**
+     * Installs a Composer package based on the provided metadata.
+     *
+     * @throws CustomComposerException if the Composer process fails or encounters an issue
+     */
+    public function installComposerPackage(): void
+    {
+        if (!is_array($this->meta) || !isset($this->meta['composer.json'])) {
+            return;
+        }
+
+        $composerJson = $this->meta['composer.json'];
+        if (!$composerJson) {
+            return;
+        }
+
+        // Prepare for install
+        $output          = '';
+        $installChannel  = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
+        $packageName     = data_get($composerJson, 'name');
+        $version         = data_get($composerJson, 'version');
+        $composerCommand = [
+            'composer',
+            'require',
+            $packageName . ($version === 'latest' ? '' : ':' . $version),
+        ];
+
+        // Create process
+        $process = new Process($composerCommand);
+        $process->setWorkingDirectory('/fleetbase/api');
+        $process->setTimeout(3600 * 2);
+
+        // Run process
+        $process->run(function ($type, $buffer) use (&$output, $installChannel) {
+            $output .= $buffer;
+            $lines = explode("\n", $buffer);
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    continue;
+                }
+                $progress = static::composerInstallOutputProgress($line);
+                if ($progress > 0) {
+                    SocketClusterService::publish($installChannel, [
+                        'process'  => 'install',
+                        'progress' => $progress,
+                    ]);
+                }
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            $friendlyMessage = static::composerOutputFriendly($output);
+            throw new InstallFailedException($friendlyMessage);
+        }
+    }
+
+    public function uninstallComposerPackage(): void
+    {
+        if (!is_array($this->meta) || !isset($this->meta['composer.json'])) {
+            return;
+        }
+
+        $composerJson = $this->meta['composer.json'];
+        if (!$composerJson) {
+            return;
+        }
+
+        // Prepare for uninstall
+        $output           = '';
+        $uninstallChannel = implode('.', ['uninstall', $this->company_uuid, $this->extension_uuid]);
+        $packageName      = data_get($composerJson, 'name');
+        $composerCommand  = [
+            'composer',
+            'remove',
+            $packageName,
+        ];
+
+        // Create process
+        $process = new Process($composerCommand);
+        $process->setWorkingDirectory('/fleetbase/api');
+        $process->setTimeout(3600 * 2);
+
+        // Run process
+        $process->run(function ($type, $buffer) use (&$output, $uninstallChannel) {
+            $output .= $buffer;
+            $lines = explode("\n", $buffer);
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    continue;
+                }
+                $progress = static::composerUninstallOutputProgress($line);
+                if ($progress > 0) {
+                    SocketClusterService::publish($uninstallChannel, [
+                        'process'  => 'uninstall',
+                        'progress' => $progress,
+                    ]);
+                }
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            $friendlyMessage = static::composerOutputFriendly($output);
+            throw new InstallFailedException($friendlyMessage);
+        }
+    }
+
+    /**
+     * Parses Composer output to provide a user-friendly message.
+     *
+     * This method checks the Composer output for specific keywords or phrases
+     * and returns a simplified, more understandable message suitable for end-users.
+     *
+     * @param string $output the raw output from Composer
+     *
+     * @return string a user-friendly interpretation of the output
+     */
+    public static function composerOutputFriendly($output): string
+    {
+        // Check for successful install/update
+        if (strpos($output, 'Generating optimized autoload files') !== false) {
+            return 'Installation successful. Packages have been updated.';
+        }
+
+        // Check for 'Nothing to install, update or remove'
+        if (strpos($output, 'Nothing to install, update or remove') !== false) {
+            return 'No changes made. Everything is already up-to-date.';
+        }
+
+        // Check for 'Package is abandoned'
+        if (preg_match_all('/Package (.+) is abandoned/', $output, $matches)) {
+            $abandonedPackages = implode(', ', $matches[1]);
+
+            return "Warning: The following packages are abandoned and should be replaced: $abandonedPackages.";
+        }
+
+        // Check for dependency issues
+        if (preg_match('/Problem (\d+)/', $output, $matches)) {
+            return 'Unable to install due to dependency compatibility issues.';
+        }
+
+        // If no known patterns are found, return a generic message or the original output
+        return 'An error occurred during installation. Please check the log for details.';
+    }
+
+    /**
+     * Estimates the progress of a Composer installation process.
+     *
+     * This method interprets the Composer output to estimate the progress of the installation.
+     * It assigns a progress percentage based on identified keywords or phrases in the output.
+     *
+     * @param string $output the raw output from Composer
+     *
+     * @return int an estimated progress percentage
+     */
+    public static function composerInstallOutputProgress($output): int
+    {
+        // Trim the output to remove unnecessary whitespace
+        $output = trim($output);
+
+        // Initial phase, updating composer.json and resolving dependencies
+        if (strpos($output, 'Running composer update') !== false) {
+            return 10;
+        }
+        // Dependencies are being updated
+        elseif (strpos($output, 'Loading composer repositories with package information') !== false) {
+            return 20;
+        }
+        // Dependencies updating step
+        elseif (strpos($output, 'Updating dependencies') !== false) {
+            return 30;
+        }
+        // Lock file is being written
+        elseif (strpos($output, 'Lock file operations') !== false) {
+            return 40;
+        }
+        // Lock file writing in progress
+        elseif (strpos($output, 'Writing lock file') !== false) {
+            return 50;
+        }
+        // Installing dependencies
+        elseif (strpos($output, 'Installing dependencies from lock file') !== false) {
+            return 60;
+        }
+        // Package operations, installation begins
+        elseif (strpos($output, 'Package operations:') !== false) {
+            return 70;
+        }
+        // Downloading a specific package
+        elseif (strpos($output, '- Downloading') !== false) {
+            return 75;
+        }
+        // Extracting archive for a package
+        elseif (strpos($output, '- Installing') !== false) {
+            return 80;
+        }
+        // Autoload files are generated, nearing completion
+        elseif (strpos($output, 'Generating optimized autoload files') !== false) {
+            return 90;
+        }
+        // Final steps, package discovery and publishing assets
+        elseif (strpos($output, 'postAutoloadDump') !== false
+                || strpos($output, '@php artisan package:discover --ansi') !== false
+                || strpos($output, '@php artisan vendor:publish') !== false) {
+            return 95;
+        }
+        // Completion messages
+        elseif (strpos($output, 'No security vulnerability advisories found') !== false) {
+            return 100;
+        }
+
+        // Default progress if no known phrases are matched
+        return 0;
+    }
+
+    /**
+     * Parses the output of the composer uninstall process to determine progress.
+     *
+     * This function analyzes the output of the `composer remove` command and returns a progress percentage
+     * based on the stage of the process. It helps in providing real-time progress updates during the
+     * uninstallation of a Composer package.
+     *
+     * @param string $output the output from the composer uninstall process
+     *
+     * @return int the progress percentage
+     */
+    public static function composerUninstallOutputProgress($output): int
+    {
+        // Trim the output to remove unnecessary whitespace
+        $output = trim($output);
+
+        // Initial phase, updating composer.json and resolving dependencies
+        if (strpos($output, 'Running composer update') !== false) {
+            return 10;
+        }
+        // Loading repositories
+        elseif (strpos($output, 'Loading composer repositories with package information') !== false) {
+            return 20;
+        }
+        // Dependencies are being updated
+        elseif (strpos($output, 'Updating dependencies') !== false) {
+            return 30;
+        }
+        // Lock file operations are defined
+        elseif (strpos($output, 'Lock file operations') !== false) {
+            return 40;
+        }
+        // Lock file writing in progress
+        elseif (strpos($output, 'Writing lock file') !== false) {
+            return 50;
+        }
+        // Installing dependencies from lock file
+        elseif (strpos($output, 'Installing dependencies from lock file') !== false) {
+            return 60;
+        }
+        // Package operations, removal begins
+        elseif (strpos($output, 'Package operations:') !== false) {
+            return 70;
+        }
+        // Removing a specific package
+        elseif (strpos($output, '- Removing') !== false) {
+            return 80;
+        }
+        // Generating autoload files, nearing completion
+        elseif (strpos($output, 'Generating optimized autoload files') !== false) {
+            return 90;
+        }
+        // Final steps, package discovery and publishing assets
+        elseif (strpos($output, 'postAutoloadDump') !== false
+                || strpos($output, '@php artisan package:discover --ansi') !== false
+                || strpos($output, '@php artisan vendor:publish') !== false) {
+            return 95;
+        }
+        // Completion messages
+        elseif (strpos($output, 'No security vulnerability advisories found') !== false) {
+            return 100;
+        }
+
+        // Default progress if no known phrases are matched
+        return 0;
+    }
+
+    public function installEnginePackage(): void
+    {
+        if (!is_array($this->meta) || !isset($this->meta['package.json'])) {
+            return;
+        }
+
+        $packageJson = $this->meta['package.json'];
+        if (!$packageJson) {
+            return;
+        }
+
+        $packageName     = data_get($packageJson, 'name');
+        $version         = data_get($packageJson, 'version');
+        $installCommand  = [
+            'pnpm',
+            'add',
+            $packageName . ($version === 'latest' ? '' : ':' . $version),
+        ];
+
+        $process = new Process($installCommand);
+        $process->setWorkingDirectory('/fleetbase/console');
+        $process->setTimeout(3600 * 2);
+        $process->mustRun();
+
+        $installChannel = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
+        $output         = '';
+
+        foreach ($process as $type => $data) {
+            if ($process::OUT === $type) {
+                $output .= $data;
+                // $progress = static::composerOutputProgress($data);
+                SocketClusterService::publish($installChannel, [
+                    'process'  => 'install',
+                    'progress' => 0,
+                ]);
+            } else {
+                // If there is error output, it could be appended to $output for complete error message
+                $output .= $data;
+            }
+        }
+
+        dd($output);
+
+        if (!$process->isSuccessful()) {
+            throw new Exception('Engine install failed!');
+            // $friendlyMessage = static::composerOutputFriendly($output);
+            // throw new InstallFailedException($friendlyMessage);
         }
     }
 }

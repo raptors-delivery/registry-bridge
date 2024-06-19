@@ -62,6 +62,7 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
     public function boot()
     {
         $this->registerMiddleware();
+        $this->registerExpansionsFrom(__DIR__ . '/../Expansions');
         $this->loadRoutesFrom(__DIR__ . '/../routes.php');
         $this->loadMigrationsFrom(__DIR__ . '/../../migrations');
         $this->mergeConfigFrom(__DIR__ . '/../../config/registry-bridge.php', 'registry-bridge');

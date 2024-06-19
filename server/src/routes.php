@@ -21,6 +21,11 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
          * Internal Routes v1
          */
         $router->group(['prefix' => config('internals.api.routing.internal_prefix', 'v1'), 'namespace' => 'Internal\v1'], function ($router) {
+            $router->get('categories', 'RegistryController@categories');
+            $router->group(['prefix' => 'installer'], function ($router) {
+                $router->post('install', 'ExtensionInstallerController@install');
+                $router->post('uninstall', 'ExtensionInstallerController@uninstall');
+            });
             $router->group(['prefix' => 'auth'], function ($router) {
                 $router->post('authenticate', 'RegistryAuthController@authenticate');
                 $router->post('add-user', 'RegistryAuthController@addUser');
@@ -32,6 +37,7 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                 $router->post('approve', $controller('approve'));
                 $router->post('reject', $controller('reject'));
                 $router->get('download-bundle', $controller('downloadBundle'));
+                $router->get('installed', $controller('installed'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
             });
             $router->fleetbaseRoutes('registry-extension-bundles', function ($router, $controller) {
                 $router->get('download', $controller('download'));

@@ -3,6 +3,7 @@
 namespace Fleetbase\RegistryBridge\Http\Resources;
 
 use Fleetbase\Http\Resources\FleetbaseResource;
+use Fleetbase\Models\Group;
 
 class RegistryUser extends FleetbaseResource
 {
@@ -28,8 +29,12 @@ class RegistryUser extends FleetbaseResource
 
     public function groups(): array
     {
-        return collect(data_get($this->user, 'groups', []))->map(function ($group) {
-            return $group->public_id;
+        return collect(['$all', '$authenticated', ...data_get($this->user, 'groups', [])])->map(function ($group) {
+            if ($group instanceof Group) {
+                return $group->public_id;
+            }
+
+            return $group;
         })->toArray();
     }
 }

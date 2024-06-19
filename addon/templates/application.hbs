@@ -1,4 +1,5 @@
 <EmberWormhole @to="sidebar-menu-items">
+    <Layout::Sidebar::Item @route="console.registry-bridge.installed" @icon="inbox">Installed</Layout::Sidebar::Item>
     <Layout::Sidebar::Panel @open={{true}} @title="Explore">
         <Layout::Sidebar::Item @route="console.registry-bridge.explore.index" @icon="shapes">Explore All</Layout::Sidebar::Item>
         {{#each this.categories as |category|}}
