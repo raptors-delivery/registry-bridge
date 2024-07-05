@@ -708,7 +708,7 @@ class RegistryExtensionBundle extends Model
         dd($output);
 
         if (!$process->isSuccessful()) {
-            throw new Exception('Engine install failed!');
+            throw new \Exception('Engine install failed!');
             // $friendlyMessage = static::composerOutputFriendly($output);
             // throw new InstallFailedException($friendlyMessage);
         }

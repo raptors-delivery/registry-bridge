@@ -85,6 +85,7 @@ class ExtensionInstallerController extends Controller
      */
     public function uninstall(InstallExtensionRequest $request)
     {
+        set_time_limit(120);
         $extension   = RegistryExtension::where('public_id', $request->input('extension'))->first();
         $uninstalled = false;
 

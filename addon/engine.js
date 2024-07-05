@@ -18,7 +18,7 @@ export default class RegistryBridgeEngine extends Engine {
     };
     setupExtension = function (app, engine, universe) {
         // Register menu item in header
-        universe.registerHeaderMenuItem('Extensions', 'console.registry-bridge', { icon: 'shapes', priority: 99 });
+        universe.registerHeaderMenuItem('Extensions', 'console.extensions', { icon: 'shapes', priority: 99 });
         // Register admin controls
         universe.registerAdminMenuPanel(
             'Extensions Registry',

@@ -1,7 +1,7 @@
 <EmberWormhole @to="sidebar-menu-items">
-    <Layout::Sidebar::Item @route="console.registry-bridge.installed" @icon="inbox">Installed</Layout::Sidebar::Item>
+    <Layout::Sidebar::Item @route="console.extensions.installed" @icon="inbox">Installed</Layout::Sidebar::Item>
     <Layout::Sidebar::Panel @open={{true}} @title="Explore">
-        <Layout::Sidebar::Item @route="console.registry-bridge.explore.index" @icon="shapes">Explore All</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.extensions.explore.index" @icon="shapes">Explore All</Layout::Sidebar::Item>
         {{#each this.categories as |category|}}
             <LinkTo @route="explore.category" @model={{category}} class="next-nav-item">
                 <div class="next-nav-item-icon-container">
@@ -13,10 +13,10 @@
         {{/each}}
     </Layout::Sidebar::Panel>
     <Layout::Sidebar::Panel @open={{true}} @title="Developers">
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.extensions" @icon="box-archive">Extensions</Layout::Sidebar::Item>
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.analytics" @icon="chart-simple">Analytics</Layout::Sidebar::Item>
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.payments" @icon="cash-register">Payments</Layout::Sidebar::Item>
-        <Layout::Sidebar::Item @route="console.registry-bridge.developers.credentials" @icon="key">Credentials</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.extensions.developers.extensions" @icon="box-archive">Extensions</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.extensions.developers.analytics" @icon="chart-simple">Analytics</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.extensions.developers.payments" @icon="cash-register">Payments</Layout::Sidebar::Item>
+        <Layout::Sidebar::Item @route="console.extensions.developers.credentials" @icon="key">Credentials</Layout::Sidebar::Item>
     </Layout::Sidebar::Panel>
     <Spacer @height="200px" />
 </EmberWormhole>

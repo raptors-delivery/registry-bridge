@@ -7,7 +7,7 @@
         "fleetbase-registry-bridge",
         "fleetbase"
     ],
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "authors": [
         {
             "name": "Fleetbase Pte Ltd.",
@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "fleetbase/core-api": "^1.4.25",
+        "fleetbase/core-api": "^1.4.26",
         "php-http/guzzle7-adapter": "^1.0",
         "psr/http-factory-implementation": "*"
     },

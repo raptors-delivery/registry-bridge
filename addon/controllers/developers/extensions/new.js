@@ -17,12 +17,12 @@ export default class DevelopersExtensionsNewController extends Controller {
         } catch (error) {
             return this.notifications.warning(error.message);
         }
-        return this.hostRouter.transitionTo('console.registry-bridge.developers.extensions.edit', this.extension);
+        return this.hostRouter.transitionTo('console.extensions.developers.extensions.edit', this.extension);
     }
 
     @action cancel() {
         this.reset();
-        return this.hostRouter.transitionTo('console.registry-bridge.developers.extensions');
+        return this.hostRouter.transitionTo('console.extensions.developers.extensions');
     }
 
     reset() {

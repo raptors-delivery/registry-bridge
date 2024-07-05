@@ -21,6 +21,15 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
     public $observers = [];
 
     /**
+     * The console commands registered with the service provider.
+     *
+     * @var array
+     */
+    public $commands = [
+        \Fleetbase\RegistryBridge\Console\Commands\PostInstallExtension::class
+    ];
+
+    /**
      * The middleware groups registered with the service provider.
      *
      * @var array
@@ -61,6 +70,7 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      */
     public function boot()
     {
+        $this->registerCommands();
         $this->registerMiddleware();
         $this->registerExpansionsFrom(__DIR__ . '/../Expansions');
         $this->loadRoutesFrom(__DIR__ . '/../routes.php');

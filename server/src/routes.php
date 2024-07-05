@@ -22,6 +22,8 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
          */
         $router->group(['prefix' => config('internals.api.routing.internal_prefix', 'v1'), 'namespace' => 'Internal\v1'], function ($router) {
             $router->get('categories', 'RegistryController@categories');
+            $router->get('load-installed-engines', 'RegistryController@loadInstalledEngines');
+            $router->get('load-engine-manifest/{extensionId}', 'RegistryController@loadEngineManifest');
             $router->group(['prefix' => 'installer'], function ($router) {
                 $router->post('install', 'ExtensionInstallerController@install');
                 $router->post('uninstall', 'ExtensionInstallerController@uninstall');
