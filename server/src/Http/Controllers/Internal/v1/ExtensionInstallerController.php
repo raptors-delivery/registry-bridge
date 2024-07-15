@@ -32,7 +32,7 @@ class ExtensionInstallerController extends Controller
      */
     public function install(InstallExtensionRequest $request)
     {
-        set_time_limit(120);
+        set_time_limit(120 * 6);
         $extension = RegistryExtension::where('public_id', $request->input('extension'))->first();
 
         // Check if already installed
@@ -41,22 +41,37 @@ class ExtensionInstallerController extends Controller
             return response()->error('This extension is already installed.');
         }
 
-        // Install for Composer
-        try {
-            $extension->currentBundle->installComposerPackage();
-        } catch (\Throwable $e) {
-            return response()->error($e->getMessage());
+        // Check if extensions are pre-installed to system
+        $PREINSTALLED_EXTENSIONS = config('registry-bridge.extensions.preinstalled') === true;
+
+        // Run installers if extension needs to be installed
+        if ($PREINSTALLED_EXTENSIONS === false) {
+            // Install for Composer
+            try {
+                $extension->currentBundle->installComposerPackage();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
+
+            // Install for Console
+            try {
+                $extension->currentBundle->installEnginePackage();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
+
+            // Rebuild Console
+            try {
+                $extension->currentBundle->buildConsole();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
         }
 
-        // // Install for Console
-        // // If OSS version it should send signal to console api
-        // // Which will install using pnpm, then rebuild the application
-        // // If build fails it will uninstall and report error
-        // try {
-        //     $extension->currentBundle->installEnginePackage();
-        // } catch (\Throwable $e) {
-        //     return response()->error($e->getMessage());
-        // }
+        // Run installer progress if preinstalled
+        if ($PREINSTALLED_EXTENSIONS === true) {
+            $extension->currentBundle->runInstallerProgress();
+        }
 
         // Create install record
         $install = RegistryExtensionInstall::create([
@@ -85,7 +100,7 @@ class ExtensionInstallerController extends Controller
      */
     public function uninstall(InstallExtensionRequest $request)
     {
-        set_time_limit(120);
+        set_time_limit(120 * 6);
         $extension   = RegistryExtension::where('public_id', $request->input('extension'))->first();
         $uninstalled = false;
 
@@ -95,11 +110,36 @@ class ExtensionInstallerController extends Controller
             return response()->error('This extension is not installed.');
         }
 
-        // Uninstall for Composer
-        try {
-            $extension->currentBundle->uninstallComposerPackage();
-        } catch (\Throwable $e) {
-            return response()->error($e->getMessage());
+        // Check if extensions are pre-installed to system
+        $PREINSTALLED_EXTENSIONS = config('registry-bridge.extensions.preinstalled') === true;
+
+        // Run installers if extension needs to be installed
+        if ($PREINSTALLED_EXTENSIONS === false) {
+            // Uninstall for Composer
+            try {
+                $extension->currentBundle->uninstallComposerPackage();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
+
+            // Unnstall for Console
+            try {
+                $extension->currentBundle->uninstallEnginePackage();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
+
+            // Rebuild Console
+            try {
+                $extension->currentBundle->buildConsole();
+            } catch (\Throwable $e) {
+                return response()->error($e->getMessage());
+            }
+        }
+
+        // Run installer progress if preinstalled
+        if ($PREINSTALLED_EXTENSIONS === true) {
+            $extension->currentBundle->runInstallerProgress();
         }
 
         // Remove install records

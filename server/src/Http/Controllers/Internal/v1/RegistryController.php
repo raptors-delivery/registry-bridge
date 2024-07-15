@@ -38,11 +38,11 @@ class RegistryController extends Controller
 
         if (isset($extension->currentBundle)) {
             $composerJson = $extension->currentBundle->meta['composer.json'];
-            $packageJson = $extension->currentBundle->meta['package.json'] ?? null;
+            $packageJson  = $extension->currentBundle->meta['package.json'] ?? null;
             if ($composerJson) {
-                $packageDistPath = base_path('vendor/' .$composerJson['name'] . '/dist');
+                $packageDistPath   = base_path('vendor/' . $composerJson['name'] . '/dist');
                 $assetManifestPath = $packageDistPath . '/asset-manifest.json';
-                $assetManifest = json_decode(file_get_contents($assetManifestPath));
+                $assetManifest     = json_decode(file_get_contents($assetManifestPath));
 
                 // Get bundles
                 $bundles = $assetManifest->bundles;
@@ -52,10 +52,10 @@ class RegistryController extends Controller
                 foreach ($bundles as $manifest) {
                     if (isset($manifest->assets) && is_array($manifest->assets)) {
                         foreach ($manifest->assets as $asset) {
-                            $name = null;
-                            $type = $asset->type;
+                            $name    = null;
+                            $type    = $asset->type;
                             $content = file_get_contents($packageDistPath . $asset->uri);
-                            $syntax = $type === 'js' ? 'application/javascript' : 'text/css';
+                            $syntax  = $type === 'js' ? 'application/javascript' : 'text/css';
                             if ($type === 'js' && static::isES6Module($content)) {
                                 $syntax = 'module';
                             }
@@ -63,17 +63,17 @@ class RegistryController extends Controller
                             // Check for config environments which should be injected as meta tags
                             if (static::containsConfigEnvironment($content)) {
                                 // might need to make as additional $output[] element
-                                $type = 'meta';
-                                $name = static::extractModuleName($content);
+                                $type    = 'meta';
+                                $name    = static::extractModuleName($content);
                                 $content = urlencode(static::extractConfigEnvironment($content));
-                                $syntax = null;
+                                $syntax  = null;
                             }
 
                             $output[] = [
-                                'name' => $name,
-                                'type' => $type,
+                                'name'    => $name,
+                                'type'    => $type,
                                 'content' => $content,
-                                'syntax' => $syntax
+                                'syntax'  => $syntax,
                             ];
                         }
                     }
@@ -102,7 +102,6 @@ class RegistryController extends Controller
         return preg_match('/^define\("@[^"]+\/config\/environment",/', $contents);
     }
 
-
     private static function extractConfigEnvironment(string $contents)
     {
         // This regex extracts the JSON-like object from the define function's return statement
@@ -112,6 +111,7 @@ class RegistryController extends Controller
             // Correctly balance the curly braces to form a valid JSON object
             $configString = self::balanceCurlyBraces($configString);
             $configString = self::fixJsonFormat($configString);
+
             // Convert the balanced string to an array
             return $configString;
         }
@@ -119,34 +119,35 @@ class RegistryController extends Controller
         return null;
     }
 
-    private static function fixJsonFormat($jsObject) {
+    private static function fixJsonFormat($jsObject)
+    {
         // Add quotes around keys where they may be missing
-        $pattern = '/(?<=[{,])(\s*)([a-zA-Z0-9_]+)(\s*):/m';
-        $replacement = '$1"$2"$3:';
+        $pattern        = '/(?<=[{,])(\s*)([a-zA-Z0-9_]+)(\s*):/m';
+        $replacement    = '$1"$2"$3:';
         $jsonLikeString = preg_replace($pattern, $replacement, $jsObject);
-    
+
         // Replace single quotes with double quotes around string values
-        $pattern = "/:(\s*)'([^']*)'/";
-        $replacement = ':$1"$2"';
+        $pattern        = "/:(\s*)'([^']*)'/";
+        $replacement    = ':$1"$2"';
         $jsonLikeString = preg_replace($pattern, $replacement, $jsonLikeString);
-    
+
         // Ensure booleans and null are properly formatted
         $jsonLikeString = preg_replace('/:(\s*)(true|false|null)/i', ':$1$2', $jsonLikeString);
-    
+
         // Convert the inner single quotes encapsulated by double quotes back to single quotes
-        $pattern = '/"(.*?)"/s';
+        $pattern  = '/"(.*?)"/s';
         $callback = function ($matches) {
             return '"' . str_replace('"', "'", $matches[1]) . '"';
         };
         $jsonLikeString = preg_replace_callback($pattern, $callback, $jsonLikeString);
-    
+
         return $jsonLikeString;
     }
 
     private static function balanceCurlyBraces($string)
     {
         // This function aims to balance curly braces if they are not properly closed in the extracted string
-        $count = 0;
+        $count  = 0;
         $length = strlen($string);
         for ($i = 0; $i < $length; $i++) {
             if ($string[$i] === '{') {
@@ -159,6 +160,7 @@ class RegistryController extends Controller
                 }
             }
         }
+
         return $string; // Return as is if braces are balanced
     }
 
@@ -168,6 +170,7 @@ class RegistryController extends Controller
         if (preg_match('/define\("([^"]+)"/', $contents, $matches)) {
             return $matches[1];
         }
+
         return null;
     }
 }

@@ -14,6 +14,10 @@ return [
         ],
     ],
     'registry' => [
-        'host' => env('REGISTRY_HOST', 'https://registry.fleetbase.io')
+        'host' => env('REGISTRY_HOST', 'https://registry.fleetbase.io'),
+        'token' => env('REGISTRY_TOKEN', env('REGISTRY_AUTH_TOKEN'))
+    ],
+    'extensions' => [
+        'preinstalled' => env('PREINSTALLED_EXTENSIONS', false)
     ]
 ];

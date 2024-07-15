@@ -168,6 +168,28 @@ class RegistryAuthController extends Controller
         $identity    = $request->input('identity');
         $package     = $request->input('package');
         $action      = $request->input('action', 'publish');
+        $force       = $request->boolean('force');
+        $password    = $request->input('password');
+
+        // If force publish bypass checks, authenticate by user login
+        if ($force === true) {
+            // Find user by email or username
+            $user = User::where(function ($query) use ($identity) {
+                $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
+            })->first();
+
+            // Authenticate user with password
+            if (Auth::isInvalidPassword($password, $user->password)) {
+                return response()->error('Invalid credentials, unable to force publish.', 401);
+            }
+
+            return response()->json(['allowed' => true]);
+        }
+
+        // Make sure package is provided
+        if (!$package) {
+            return response()->error('No package specified for publish.', 401);
+        }
 
         // Find package
         $extension = RegistryExtension::findByPackageName($package);
@@ -176,7 +198,9 @@ class RegistryAuthController extends Controller
         }
 
         // Find user by email or username
-        $user = User::where('email', $identity)->orWhere('username', $identity)->first();
+        $user = User::where(function ($query) use ($identity) {
+            $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
+        })->first();
         if (!$user) {
             return response()->error('Attempting to publish extension with invalid user.', 401);
         }

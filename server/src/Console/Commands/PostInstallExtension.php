@@ -14,7 +14,7 @@ class PostInstallExtension extends Command
      *
      * @var string
      */
-    protected $signature = 'extension:post-install {extensionId}';
+    protected $signature = 'registry:post-install {extensionId}';
 
     /**
      * The console command description.
@@ -31,7 +31,7 @@ class PostInstallExtension extends Command
     public function handle()
     {
         $extensionId = $this->argument('extensionId');
-        $extension = RegistryExtension::disableCache()->where('public_id', $extensionId)->first();
+        $extension   = RegistryExtension::disableCache()->where('public_id', $extensionId)->first();
 
         if ($extension) {
             $this->postInstallExtension($extension);
@@ -45,9 +45,6 @@ class PostInstallExtension extends Command
 
     /**
      * Post install extension commands.
-     *
-     * @param  \Fleetbase\RegistryBridge\Models\RegistryExtension  $extension
-     * @return void
      */
     public function postInstallExtension(RegistryExtension $extension): void
     {
@@ -55,12 +52,12 @@ class PostInstallExtension extends Command
             $composerJson = $extension->currentBundle->meta['composer.json'];
             if ($composerJson) {
                 $extensionPath = base_path('vendor/' . $composerJson['name']);
-                
+
                 $commands = [
                     'rm -rf /fleetbase/.pnpm-store',
                     'rm -rf node_modules',
                     'pnpm install',
-                    'pnpm build'
+                    'pnpm build',
                 ];
 
                 $this->info('Running post install for: ' . $extension->name);

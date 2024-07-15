@@ -10,7 +10,7 @@
         </div>
         {{#if @options.progress}}
             <div class="my-4">
-                <ProgressBar @title={{concat "Installing " this.extension.name}} @percent={{@options.progress}} />
+                <ProgressBar @title={{@options.stepDescription}} @percent={{@options.progress}} />
             </div>
         {{/if}}
         {{#if this.extension.screenshots}}

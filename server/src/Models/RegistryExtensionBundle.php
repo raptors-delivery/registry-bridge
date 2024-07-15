@@ -384,9 +384,13 @@ class RegistryExtensionBundle extends Model
     }
 
     /**
-     * Installs a Composer package based on the provided metadata.
+     * Installs a specific server package using Composer based on provided metadata.
      *
-     * @throws CustomComposerException if the Composer process fails or encounters an issue
+     * This method manages the installation of a server-side package specified in the composer.json metadata.
+     * It executes a Composer command to install the package, monitors the output for progress, and broadcasts
+     * these updates in real-time to a WebSocket channel.
+     *
+     * @throws InstallFailedException if the Composer package installation fails, with a user-friendly message
      */
     public function installComposerPackage(): void
     {
@@ -427,6 +431,7 @@ class RegistryExtensionBundle extends Model
                 if ($progress > 0) {
                     SocketClusterService::publish($installChannel, [
                         'process'  => 'install',
+                        'step'     => 'server.install',
                         'progress' => $progress,
                     ]);
                 }
@@ -439,6 +444,15 @@ class RegistryExtensionBundle extends Model
         }
     }
 
+    /**
+     * Uninstalls a specific server package using Composer based on provided metadata.
+     *
+     * This function handles the uninstallation of a server-side package as defined in the composer.json metadata.
+     * It runs a Composer remove command, processes the output to track uninstallation progress, and publishes
+     * these updates through a WebSocket channel.
+     *
+     * @throws InstallFailedException if the Composer package uninstallation fails, providing a user-friendly message
+     */
     public function uninstallComposerPackage(): void
     {
         if (!is_array($this->meta) || !isset($this->meta['composer.json'])) {
@@ -477,6 +491,7 @@ class RegistryExtensionBundle extends Model
                 if ($progress > 0) {
                     SocketClusterService::publish($uninstallChannel, [
                         'process'  => 'uninstall',
+                        'step'     => 'server.uninstall',
                         'progress' => $progress,
                     ]);
                 }
@@ -486,6 +501,215 @@ class RegistryExtensionBundle extends Model
         if (!$process->isSuccessful()) {
             $friendlyMessage = static::composerOutputFriendly($output);
             throw new InstallFailedException($friendlyMessage);
+        }
+    }
+
+    /**
+     * Installs a specific engine package defined in the metadata using PNPM.
+     *
+     * This method is responsible for installing an engine package based on the package metadata provided.
+     * It creates and runs a PNPM installation process, monitors its output for progress, and sends real-time
+     * updates via a WebSocket channel.
+     *
+     * @throws \Exception if the engine installation process fails
+     */
+    public function installEnginePackage(): void
+    {
+        if (!is_array($this->meta) || !isset($this->meta['package.json'])) {
+            return;
+        }
+
+        $packageJson = $this->meta['package.json'];
+        if (!$packageJson) {
+            return;
+        }
+
+        // Prepare for install
+        $output          = '';
+        $installChannel  = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
+        $packageName     = data_get($packageJson, 'name');
+        $version         = data_get($packageJson, 'version');
+        $installCommand  = [
+            'pnpm',
+            'add',
+            $packageName . ($version === 'latest' ? '' : '@' . $version),
+        ];
+
+        // Create process
+        $process = new Process($installCommand);
+        $process->setWorkingDirectory(config('fleetbase.console.path'));
+        $process->setTimeout(3600 * 2);
+
+        // Run process
+        $process->run(function ($type, $buffer) use (&$output, $installChannel) {
+            $output .= $buffer;
+            $lines = explode("\n", $buffer);
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    continue;
+                }
+                $progress = static::pnpmInstallOutputProgress($line);
+                if ($progress > 0) {
+                    SocketClusterService::publish($installChannel, [
+                        'process'  => 'install',
+                        'step'     => 'engine.install',
+                        'progress' => $progress,
+                    ]);
+                }
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            throw new \Exception('Engine install failed!');
+        }
+    }
+
+    /**
+     * Uninstalls a specific engine package defined in the metadata using PNPM.
+     *
+     * This function initiates the uninstallation of an engine package using PNPM, based on the metadata provided.
+     * It captures and interprets the output of the uninstall command to provide real-time progress updates through
+     * a WebSocket channel.
+     *
+     * @throws \Exception if the engine uninstallation process fails
+     */
+    public function uninstallEnginePackage(): void
+    {
+        if (!is_array($this->meta) || !isset($this->meta['package.json'])) {
+            return;
+        }
+
+        $packageJson = $this->meta['package.json'];
+        if (!$packageJson) {
+            return;
+        }
+
+        // Prepare for uninstall
+        $output           = '';
+        $uninstallChannel = implode('.', ['uninstall', $this->company_uuid, $this->extension_uuid]);
+        $packageName      = data_get($packageJson, 'name');
+        $installCommand   = [
+            'pnpm',
+            'remove',
+            $packageName,
+        ];
+
+        // Create process
+        $process = new Process($installCommand);
+        $process->setWorkingDirectory(config('fleetbase.console.path'));
+        $process->setTimeout(3600 * 2);
+
+        // Run process
+        $process->run(function ($type, $buffer) use (&$output, $uninstallChannel) {
+            $output .= $buffer;
+            $lines = explode("\n", $buffer);
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    continue;
+                }
+                $progress = static::pnpmUninstallOutputProgress($line);
+                if ($progress > 0) {
+                    SocketClusterService::publish($uninstallChannel, [
+                        'process'  => 'uninstall',
+                        'step'     => 'engine.uninstall',
+                        'progress' => $progress,
+                    ]);
+                }
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            throw new \Exception('Engine uninstall failed!');
+        }
+    }
+
+    /**
+     * Initiates and manages the build process of the Fleetbase console using PNPM.
+     *
+     * This method prepares and executes the build process for the Fleetbase console. It monitors the build
+     * output to provide real-time updates via a WebSocket channel. It captures and interprets the output to
+     * estimate the progress, which is then published to a designated channel for frontend display.
+     *
+     * @throws \Exception if the build process fails
+     */
+    public function buildConsole()
+    {
+        // Prepare to build/rebuild console
+        $output         = '';
+        $buildChannel   = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
+        $buildCommand   = [
+            'pnpm',
+            'build',
+            '--environment',
+            config('app.env'),
+        ];
+
+        // Create process
+        $process = new Process($buildCommand);
+        $process->setWorkingDirectory(config('fleetbase.console.path'));
+        $process->setTimeout(3600 * 2);
+
+        // Run process
+        $process->run(function ($type, $buffer) use (&$output, $buildChannel) {
+            $output .= $buffer;
+            $lines = explode("\n", $buffer);
+            foreach ($lines as $line) {
+                if (trim($line) === '') {
+                    continue;
+                }
+                $progress = static::pnpmBuildOutputProgress($line);
+                if ($progress > 0) {
+                    SocketClusterService::publish($buildChannel, [
+                        'process'  => 'build',
+                        'step'     => 'console.build',
+                        'progress' => $progress,
+                    ]);
+                }
+            }
+        });
+
+        if (!$process->isSuccessful()) {
+            throw new \Exception('Console build failed!');
+        }
+    }
+
+    public function runInstallerProgress(): void
+    {
+        $channel   = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
+        $steps     = ['api.install', 'engine.install', 'console.build'];
+
+        foreach ($steps as $step) {
+            $run = range(1, 100);
+            foreach ($run as $progress) {
+                SocketClusterService::publish($channel, [
+                    'process'  => 'install',
+                    'step'     => $step,
+                    'progress' => $progress,
+                ]);
+
+                // minimal latency
+                usleep(500 * rand(2, 4));
+            }
+        }
+    }
+
+    public function runUninstallerProgress(): void
+    {
+        $channel   = implode('.', ['uninstall', $this->company_uuid, $this->extension_uuid]);
+        $steps     = ['api.uninstall', 'engine.uninstall', 'console.build'];
+
+        foreach ($steps as $step) {
+            $run = range(1, 100);
+            foreach ($run as $progress) {
+                SocketClusterService::publish($channel, [
+                    'process'  => 'uninstall',
+                    'step'     => $step,
+                    'progress' => $progress,
+                ]);
+
+                // minimal latency
+                usleep(500 * rand(2, 4));
+            }
         }
     }
 
@@ -664,53 +888,128 @@ class RegistryExtensionBundle extends Model
         return 0;
     }
 
-    public function installEnginePackage(): void
+    /**
+     * Estimates the progress of a PNPM installation process.
+     *
+     * This method interprets the PNPM output to estimate the progress of the installation based on specific keywords and phrases found in the output. It assigns a progress percentage based on identified phases of the install process, such as resolving dependencies and writing lock files.
+     *
+     * @param string $output the raw output from the PNPM install command
+     *
+     * @return int An estimated progress percentage. This is an integer between 0 and 100 where 0 means just started, and 100 means complete.
+     */
+    public static function pnpmInstallOutputProgress($output): int
     {
-        if (!is_array($this->meta) || !isset($this->meta['package.json'])) {
-            return;
+        $output = trim($output);
+
+        // Check if the output indicates starting phase
+        if (strpos($output, 'Packages: +1') !== false) {
+            return 10;
         }
-
-        $packageJson = $this->meta['package.json'];
-        if (!$packageJson) {
-            return;
-        }
-
-        $packageName     = data_get($packageJson, 'name');
-        $version         = data_get($packageJson, 'version');
-        $installCommand  = [
-            'pnpm',
-            'add',
-            $packageName . ($version === 'latest' ? '' : ':' . $version),
-        ];
-
-        $process = new Process($installCommand);
-        $process->setWorkingDirectory('/fleetbase/console');
-        $process->setTimeout(3600 * 2);
-        $process->mustRun();
-
-        $installChannel = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
-        $output         = '';
-
-        foreach ($process as $type => $data) {
-            if ($process::OUT === $type) {
-                $output .= $data;
-                // $progress = static::composerOutputProgress($data);
-                SocketClusterService::publish($installChannel, [
-                    'process'  => 'install',
-                    'progress' => 0,
-                ]);
+        // Check for resolved packages progress
+        elseif (preg_match('/Progress: resolved (\d+),/', $output, $matches)) {
+            $resolved = (int) $matches[1];
+            if ($resolved < 500) {
+                return 20;
+            } elseif ($resolved < 1000) {
+                return 40;
+            } elseif ($resolved < 1500) {
+                return 60;
             } else {
-                // If there is error output, it could be appended to $output for complete error message
-                $output .= $data;
+                return 80;
             }
         }
-
-        dd($output);
-
-        if (!$process->isSuccessful()) {
-            throw new \Exception('Engine install failed!');
-            // $friendlyMessage = static::composerOutputFriendly($output);
-            // throw new InstallFailedException($friendlyMessage);
+        // Check for final steps
+        elseif (strpos($output, 'dependencies:') !== false) {
+            return 90;
         }
+        // Completion message
+        elseif (strpos($output, 'Done in') !== false) {
+            return 100;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Estimates the progress of a PNPM uninstallation process.
+     *
+     * This method analyzes the output from the PNPM uninstall command to estimate the progress of the package removal. It uses specific indicators within the output to assign a progress percentage, such as the stages of resolving dependencies, removing packages, and cleaning up.
+     *
+     * @param string $output the raw output from the PNPM uninstall command
+     *
+     * @return int An estimated progress percentage. This value is an integer between 0 and 100, where 0 indicates the beginning of the uninstall process, and 100 indicates completion.
+     */
+    public static function pnpmUninstallOutputProgress($output): int
+    {
+        $output = trim($output);
+
+        // Check for the uninstall initiation
+        if (strpos($output, 'Packages: -1') !== false) {
+            return 10;
+        }
+        // Check for resolved packages progress
+        elseif (preg_match('/Progress: resolved (\d+),/', $output, $matches)) {
+            $resolved = (int) $matches[1];
+            if ($resolved < 500) {
+                return 20;
+            } elseif ($resolved < 1000) {
+                return 40;
+            } elseif ($resolved < 1500) {
+                return 60;
+            } else {
+                return 80;
+            }
+        }
+        // Check for final steps
+        elseif (strpos($output, 'dependencies:') !== false) {
+            return 90;
+        }
+        // Completion message
+        elseif (strpos($output, 'Done in') !== false) {
+            return 100;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Estimates the progress of a PNPM Ember build process.
+     *
+     * This function interprets the output from the 'pnpm build' command, specifically tailored for an Ember project build,
+     * to estimate the build's progress. The function identifies specific phases of the build process and assigns a
+     * progress percentage based on these phases.
+     *
+     * @param string $output the raw output from the PNPM build command
+     *
+     * @return int An estimated progress percentage. This is an integer between 0 and 100, where 0 means just started,
+     *             and 100 indicates the build is complete.
+     */
+    public static function pnpmBuildOutputProgress($output): int
+    {
+        $output = trim($output);
+
+        // Prebuild and setup phase
+        if (strpos($output, 'node prebuild.js') !== false) {
+            return 10;
+        }
+        // Initial building phase
+        elseif (strpos($output, '- Building') !== false) {
+            return 20;
+        }
+        // Middle build process, handling various transformations and optimizations
+        elseif (strpos($output, 'postcss-is-pseudo-class') !== false) {
+            return 50;
+        }
+        // Cleanup phase before completion
+        elseif (strpos($output, 'cleaning up...') !== false) {
+            return 80;
+        }
+        // Build completion message
+        elseif (strpos($output, 'Built project successfully') !== false) {
+            return 100;
+        }
+
+        // Default progress if no known phrases are matched
+        return 0;
     }
 }

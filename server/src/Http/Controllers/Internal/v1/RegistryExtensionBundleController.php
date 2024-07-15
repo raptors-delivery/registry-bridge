@@ -7,7 +7,6 @@ use Fleetbase\Models\File;
 use Fleetbase\RegistryBridge\Http\Controllers\RegistryBridgeController;
 use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionBundleRequest;
 use Fleetbase\RegistryBridge\Http\Requests\RegistryExtensionActionRequest;
-use Fleetbase\RegistryBridge\Models\RegistryExtension;
 use Fleetbase\RegistryBridge\Models\RegistryExtensionBundle;
 use Fleetbase\Support\Utils;
 use Illuminate\Http\Request;
@@ -30,6 +29,8 @@ class RegistryExtensionBundleController extends RegistryBridgeController
      */
     public function createRecord(Request $request)
     {
+        $extensionId = $request->input('subject_uuid');
+
         // Create validation request
         $createRegistryExtensionBundleRequest  = CreateRegistryExtensionBundleRequest::createFrom($request);
         $rules                                 = $createRegistryExtensionBundleRequest->rules();
@@ -63,15 +64,9 @@ class RegistryExtensionBundleController extends RegistryBridgeController
             return response()->error('No `api` or `engine` property set in the `extension.json`');
         }
 
-        // Make sure the extension ID is set
-        $hasExtensionIdSet = isset($extensionJson->id) && RegistryExtension::where('public_id', $extensionJson->id)->exists();
-        if (!$hasExtensionIdSet) {
-            return response()->error('Invalid extension ID set in `extension.json`, the ID must belong to the submission and be set.');
-        }
-
         // Set bundle number
-        $numberOfBundles = RegistryExtensionBundle::whereHas('extension', function ($query) use ($extensionJson) {
-            $query->where('public_id', $extensionJson->id);
+        $numberOfBundles = RegistryExtensionBundle::whereHas('extension', function ($query) use ($extensionId) {
+            $query->where('public_id', $extensionId);
         })->count();
         $extensionJson->bundle_number = ($numberOfBundles ?? 0) + 1;
 
