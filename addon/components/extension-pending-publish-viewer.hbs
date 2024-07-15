@@ -16,8 +16,20 @@
                         </div>
                     </button>
                     <div class="space-y-2 mt-3">
-                        <Button @size="sm" @icon="clipboard-list" @text={{t "registry-bridge.component.extension-pending-publish-viewer.view-details"}} @onClick={{fn this.focusExtension extension}} class="w-full" />
-                        <Button @size="sm" @icon="download" @text={{t "registry-bridge.component.extension-pending-publish-viewer.download-bundle"}} @onClick={{perform this.downloadBundle extension}} class="w-full" />
+                        <Button
+                            @size="sm"
+                            @icon="clipboard-list"
+                            @text={{t "registry-bridge.component.extension-pending-publish-viewer.view-details"}}
+                            @onClick={{fn this.focusExtension extension}}
+                            class="w-full"
+                        />
+                        <Button
+                            @size="sm"
+                            @icon="download"
+                            @text={{t "registry-bridge.component.extension-pending-publish-viewer.download-bundle"}}
+                            @onClick={{perform this.downloadBundle extension}}
+                            class="w-full"
+                        />
                     </div>
                 </div>
             {{else}}

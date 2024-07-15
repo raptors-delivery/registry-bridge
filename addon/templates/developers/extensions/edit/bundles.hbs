@@ -2,7 +2,12 @@
     <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.bundles"}} @open={{true}} @pad={{false}} @panelBodyClass="bg-white dark:bg-gray-800">
         <div class="px-4 pb-4 pt-2">
             <div>
-                <FileUpload @name={{t "registry-bridge.developers.extensions.extension-form.upload-new-bundle"}} @accept={{join "," this.acceptedBundleTypes}} @onFileAdded={{perform this.uploadBundle}} as |queue|>
+                <FileUpload
+                    @name={{t "registry-bridge.developers.extensions.extension-form.upload-new-bundle"}}
+                    @accept={{join "," this.acceptedBundleTypes}}
+                    @onFileAdded={{perform this.uploadBundle}}
+                    as |queue|
+                >
                     <a tabindex={{0}} class="flex items-center px-0 mt-2 text-xs no-underline truncate btn btn-sm btn-default" disabled={{not queue.files.length}}>
                         {{#if queue.files.length}}
                             <div class="mr-1.5">

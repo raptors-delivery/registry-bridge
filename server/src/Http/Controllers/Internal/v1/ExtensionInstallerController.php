@@ -139,7 +139,7 @@ class ExtensionInstallerController extends Controller
 
         // Run installer progress if preinstalled
         if ($PREINSTALLED_EXTENSIONS === true) {
-            $extension->currentBundle->runInstallerProgress();
+            $extension->currentBundle->runUninstallerProgress();
         }
 
         // Remove install records

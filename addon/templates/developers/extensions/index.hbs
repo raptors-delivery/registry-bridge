@@ -7,7 +7,11 @@
         <div class="flex flex-row space-x-4">
             {{#each (filter-by "isNew" false @model) as |extension|}}
                 <div class="mb-4">
-                    <button type="button" class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50" {{on "click" (transition-to "developers.extensions.edit" extension)}}>
+                    <button
+                        type="button"
+                        class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50"
+                        {{on "click" (transition-to "developers.extensions.edit" extension)}}
+                    >
                         <div class="flex items-center justify-center rounded-t-lg w-full h-36" {{background-url extension.icon_url overlay=true}}>
                             <Image src={{extension.icon_url}} class="w-full h-36 rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
                         </div>

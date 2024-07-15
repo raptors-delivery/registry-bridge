@@ -4,7 +4,15 @@
     </div>
     <Button @type="default" @size="sm" @icon="arrow-left" @text={{t "common.back"}} @onClick={{transition-to "developers.extensions"}} @wrapperClass="mr-2" />
     <Button @type="primary" @size="sm" @icon="save" @text={{t "common.save"}} @onClick={{perform this.save}} @isLoading={{not this.save.isIdle}} @wrapperClass="mr-2" />
-    <Button @type="magic" @size="sm" @icon="paper-plane" @text={{t "registry-bridge.developers.extensions.extension-form.submit-for-review"}} @onClick={{this.submitForReview}} @disabled={{not this.isReady}} @isLoading={{not this.startReview.isIdle}} />
+    <Button
+        @type="magic"
+        @size="sm"
+        @icon="paper-plane"
+        @text={{t "registry-bridge.developers.extensions.extension-form.submit-for-review"}}
+        @onClick={{this.submitForReview}}
+        @disabled={{not this.isReady}}
+        @isLoading={{not this.startReview.isIdle}}
+    />
 </Layout::Section::Header>
 
 <Layout::Section::Body class="overflow-y-scroll h-full">

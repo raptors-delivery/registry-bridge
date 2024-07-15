@@ -3,8 +3,8 @@
         <Image src={{@extension.icon_url}} class="w-full h-36 rounded-t-lg {{@iconClass}}" alt={{@extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
     </div>
     <div class="text-left px-3 py-2 rounded-b-lg bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900 {{@detailsWrapperClass}}">
-        <span class="font-semibold text-sm block  {{@nameTextClass}}">{{@extension.name}}</span>
-        <p class="text-xs  {{@descriptionTextClass}}">{{n-a @extension.description}}</p>
+        <span class="font-semibold text-sm block {{@nameTextClass}}">{{@extension.name}}</span>
+        <p class="text-xs {{@descriptionTextClass}}">{{n-a @extension.description}}</p>
         {{yield @extension}}
     </div>
 </button>

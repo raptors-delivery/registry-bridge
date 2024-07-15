@@ -12,7 +12,7 @@ module.exports = function (environment) {
 };
 
 function getMountedEngineRoutePrefix() {
-    let mountedEngineRoutePrefix = 'internals';
+    let mountedEngineRoutePrefix = 'extensions';
     if (fleetbase && typeof fleetbase.route === 'string') {
         mountedEngineRoutePrefix = fleetbase.route;
     }

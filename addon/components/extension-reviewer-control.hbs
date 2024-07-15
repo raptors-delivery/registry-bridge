@@ -16,10 +16,36 @@
                         </div>
                     </button>
                     <div class="space-y-2 mt-3">
-                        <Button @size="sm" @icon="clipboard-list" @text={{t "registry-bridge.component.extension-reviewer-control.view-details"}} @onClick={{fn this.focusExtension extension}} class="w-full" />
-                        <Button @size="sm" @icon="download" @text={{t "registry-bridge.component.extension-reviewer-control.download-bundle"}} @onClick={{perform this.downloadBundle extension}} class="w-full" />
-                        <Button @type="success" @size="sm" @icon="check" @text={{t "registry-bridge.component.extension-reviewer-control.approve"}} @onClick={{fn this.approve extension}} class="w-full" />
-                        <Button @type="danger" @size="sm" @icon="ban" @text={{t "registry-bridge.component.extension-reviewer-control.reject"}} @onClick={{fn this.reject extension}} class="w-full" />
+                        <Button
+                            @size="sm"
+                            @icon="clipboard-list"
+                            @text={{t "registry-bridge.component.extension-reviewer-control.view-details"}}
+                            @onClick={{fn this.focusExtension extension}}
+                            class="w-full"
+                        />
+                        <Button
+                            @size="sm"
+                            @icon="download"
+                            @text={{t "registry-bridge.component.extension-reviewer-control.download-bundle"}}
+                            @onClick={{perform this.downloadBundle extension}}
+                            class="w-full"
+                        />
+                        <Button
+                            @type="success"
+                            @size="sm"
+                            @icon="check"
+                            @text={{t "registry-bridge.component.extension-reviewer-control.approve"}}
+                            @onClick={{fn this.approve extension}}
+                            class="w-full"
+                        />
+                        <Button
+                            @type="danger"
+                            @size="sm"
+                            @icon="ban"
+                            @text={{t "registry-bridge.component.extension-reviewer-control.reject"}}
+                            @onClick={{fn this.reject extension}}
+                            class="w-full"
+                        />
                     </div>
                 </div>
             {{else}}
