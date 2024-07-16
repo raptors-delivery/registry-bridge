@@ -3,32 +3,60 @@ import { tracked } from '@glimmer/tracking';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { later } from '@ember/runloop';
+import formatCurrency from '@fleetbase/ember-ui/utils/format-currency';
+import isModel from '@fleetbase/ember-core/utils/is-model';
+
+function removeParamFromCurrentUrl(paramToRemove) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(paramToRemove);
+    window.history.pushState({ path: url.href }, '', url.href);
+}
+
+function addParamToCurrentUrl(paramName, paramValue) {
+    const url = new URL(window.location.href);
+    url.searchParams.set(paramName, paramValue);
+    window.history.pushState({ path: url.href }, '', url.href);
+}
 
 export default class ExtensionCardComponent extends Component {
     @service modalsManager;
     @service notifications;
     @service currentUser;
     @service socket;
+    @service fetch;
+    @service stripe;
+    @service urlSearchParams;
     @tracked extension;
 
     constructor(owner, { extension }) {
         super(...arguments);
         this.extension = extension;
+        this.checkForCheckoutSession();
     }
 
-    @action onClick() {
+    @action onExtenstionUpdated(el, [extension]) {
+        this.extension = extension;
+    }
+
+    @action onClick(options = {}) {
         const installChannel = `install.${this.currentUser.companyId}.${this.extension.id}`;
+        const isAlreadyPurchased = this.extension.is_purchased === true;
+        const isAlreadyInstalled = this.extension.is_installed === true;
+        const isPaymentRequired = this.extension.payment_required === true && isAlreadyPurchased === false;
 
         if (typeof this.args.onClick === 'function') {
             this.args.onClick(this.extension);
         }
 
+        addParamToCurrentUrl('extension_id', this.extension.id);
         this.modalsManager.show('modals/extension-details', {
             titleComponent: 'extension-modal-title',
             modalClass: 'flb--extension-modal modal-lg',
             modalHeaderClass: 'flb--extension-modal-header',
-            acceptButtonText: 'Install',
-            acceptButtonIcon: 'download',
+            acceptButtonText: isPaymentRequired ? `Purchase for ${formatCurrency(this.extension.price, this.extension.currency)}` : isAlreadyInstalled ? 'Installed' : 'Install',
+            acceptButtonIcon: isPaymentRequired ? 'credit-card' : isAlreadyInstalled ? 'check' : 'download',
+            acceptButtonDisabled: isAlreadyInstalled,
+            acceptButtonScheme: isPaymentRequired ? 'success' : 'primary',
             declineButtonText: 'Done',
             process: null,
             step: null,
@@ -37,6 +65,11 @@ export default class ExtensionCardComponent extends Component {
             extension: this.extension,
             confirm: async (modal) => {
                 modal.startLoading();
+
+                // Handle purchase flow
+                if (isPaymentRequired) {
+                    return this.startCheckoutSession();
+                }
 
                 // Listen for install progress
                 this.socket.listen(installChannel, ({ process, step, progress }) => {
@@ -74,11 +107,129 @@ export default class ExtensionCardComponent extends Component {
                         },
                         1200
                     );
+                    removeParamFromCurrentUrl('extension_id');
                     modal.done();
                 } catch (error) {
                     this.notifications.serverError(error);
                 }
             },
+            decline: (modal) => {
+                modal.done();
+                removeParamFromCurrentUrl('extension_id');
+            },
+            ...options,
         });
+    }
+
+    async startCheckoutSession() {
+        const checkout = await this.stripe.initEmbeddedCheckout({
+            fetchClientSecret: this.fetchClientSecret.bind(this),
+        });
+
+        await this.modalsManager.done();
+        later(
+            this,
+            () => {
+                this.modalsManager.show('modals/extension-purchase-form', {
+                    title: `Purchase the '${this.extension.name}' Extension`,
+                    modalClass: 'stripe-extension-purchase',
+                    modalFooterClass: 'hidden-i',
+                    extension: this.extension,
+                    checkoutElementInserted: (el) => {
+                        checkout.mount(el);
+                    },
+                    decline: async (modal) => {
+                        checkout.destroy();
+                        await modal.done();
+                        later(
+                            this,
+                            () => {
+                                this.onClick();
+                            },
+                            100
+                        );
+                    },
+                });
+            },
+            100
+        );
+    }
+
+    async fetchClientSecret() {
+        try {
+            const { clientSecret } = await this.fetch.post(
+                'payments/create-checkout-session',
+                { extension: this.extension.id, uri: window.location.pathname },
+                { namespace: '~registry/v1' }
+            );
+
+            return clientSecret;
+        } catch (error) {
+            this.notifications.serverError(error);
+        }
+    }
+
+    async checkForCheckoutSession() {
+        later(
+            this,
+            async () => {
+                const checkoutSessionId = this.urlSearchParams.get('checkout_session_id');
+                const extensionId = this.urlSearchParams.get('extension_id');
+
+                if (!checkoutSessionId && this.extension.id === extensionId) {
+                    return this.onClick();
+                }
+
+                if (checkoutSessionId && this.extension.id === extensionId) {
+                    this.modalsManager.show('modals/confirm-extension-purchase', {
+                        title: 'Finalizing Purchase',
+                        modalClass: 'finalize-extension-purchase',
+                        loadingMessage: 'Completing purchase do not refresh or exit window...',
+                        modalFooterClass: 'hidden-i',
+                        backdropClose: false,
+                    });
+
+                    try {
+                        const { status, extension } = await this.fetch.post(
+                            'payments/get-checkout-session',
+                            { checkout_session_id: checkoutSessionId, extension: this.extension.id },
+                            { namespace: '~registry/v1' }
+                        );
+
+                        // Update this extension
+                        const extensionModel = this.fetch.jsonToModel(extension, 'registry-extension');
+                        if (isModel(extensionModel)) {
+                            this.extension = extensionModel;
+                        }
+
+                        // Fire a callback
+                        if (typeof this.args.onCheckoutCompleted === 'function') {
+                            this.args.onCheckoutCompleted(this.extension, status);
+                        }
+
+                        if (status === 'complete' || status === 'purchase_complete') {
+                            // remove checkout session id
+                            removeParamFromCurrentUrl('checkout_session_id');
+
+                            // close confirmation dialog and notify payment completed
+                            await this.modalsManager.done();
+                            if (status === 'complete') {
+                                this.notifications.success('Payment Completed.');
+                            }
+                            later(
+                                this,
+                                () => {
+                                    this.onClick();
+                                },
+                                100
+                            );
+                        }
+                    } catch (error) {
+                        this.notifications.serverError(error);
+                    }
+                }
+            },
+            300
+        );
     }
 }

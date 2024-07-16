@@ -14,7 +14,10 @@ export default buildRoutes(function () {
             });
         });
         this.route('analytics');
-        this.route('payments');
+        this.route('payments', function () {
+            this.route('index', { path: '/' });
+            this.route('onboard');
+        });
         this.route('credentials');
     });
     this.route('explore', { path: '/' }, function () {

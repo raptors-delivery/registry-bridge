@@ -9,6 +9,7 @@
         @size="sm"
         @icon="paper-plane"
         @text={{t "registry-bridge.developers.extensions.extension-form.submit-for-review"}}
+        @helpText={{this.isReadyMessage}}
         @onClick={{this.submitForReview}}
         @disabled={{not this.isReady}}
         @isLoading={{not this.startReview.isIdle}}

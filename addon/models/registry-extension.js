@@ -62,6 +62,8 @@ export default class RegistryExtensionModel extends Model {
     @attr('array') languages;
     @attr('object') meta;
     @attr('boolean') core_service;
+    @attr('boolean') is_purchased;
+    @attr('boolean') is_installed;
     @attr('string', { defaultValue: 'pending' }) status;
 
     /** @dates */

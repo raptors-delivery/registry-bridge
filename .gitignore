@@ -4,6 +4,7 @@
 
 # dependencies
 /node_modules/
+/scripts/node_modules/
 
 # misc
 /.env*
@@ -13,7 +14,6 @@
 /npm-debug.log*
 /testem.log
 /yarn-error.log
-/.php-cs-fixer.cache
 
 # ember-try
 /.node_modules.ember-try/
@@ -24,3 +24,16 @@
 
 # broccoli-debug
 /DEBUG/
+
+# server
+.idea/*
+.idea/codeStyleSettings.xml
+composer.lock
+/server_vendor
+/server/vendor/
+.phpunit.result.cache
+.php_cs.cache
+.php-cs-fixer.cache
+*.swp
+*.swo
+.DS_Store

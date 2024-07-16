@@ -9,6 +9,8 @@ use Fleetbase\Models\Company;
 use Fleetbase\Models\File;
 use Fleetbase\Models\Model;
 use Fleetbase\Models\User;
+use Fleetbase\RegistryBridge\Support\Utils;
+use Fleetbase\Support\Utils as SupportUtils;
 use Fleetbase\Traits\HasApiModelBehavior;
 use Fleetbase\Traits\HasMetaAttributes;
 use Fleetbase\Traits\HasPublicId;
@@ -53,6 +55,7 @@ class RegistryExtension extends Model
         'next_bundle_uuid',
         'icon_uuid',
         'public_id',
+        'stripe_product_id',
         'name',
         'subtitle',
         'payment_required',
@@ -116,6 +119,8 @@ class RegistryExtension extends Model
         'next_bundle_public_id',
         'category_name',
         'publisher_name',
+        'is_purchased',
+        'is_installed',
     ];
 
     /**
@@ -143,6 +148,24 @@ class RegistryExtension extends Model
      * @var array
      */
     protected $searchableColumns = ['name'];
+
+    /**
+     * The "booting" method of the model.
+     *
+     * This method is called on the model boot and sets up
+     * event listeners, such as creating a unique bundle ID
+     * when a new model instance is being created.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($model) {
+            if ($model->isDirty('price')) {
+                $model->updateOrCreateStripePrice();
+            }
+        });
+    }
 
     /**
      * Get the options for generating the slug.
@@ -223,7 +246,7 @@ class RegistryExtension extends Model
      */
     public function bundles()
     {
-        return $this->hasMany(RegistryExtensionBundle::class, 'extension+uuid', 'uuid');
+        return $this->hasMany(RegistryExtensionBundle::class, 'extension_uuid', 'uuid');
     }
 
     /**
@@ -243,11 +266,37 @@ class RegistryExtension extends Model
     }
 
     /**
-     * Get avatar URL attribute.
-     *
-     * @return string
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function getIconUrlAttribute()
+    public function purchases()
+    {
+        return $this->hasMany(RegistryExtensionPurchase::class, 'extension_uuid', 'uuid');
+    }
+
+    /**
+     * Check if current session has purchased extension.
+     */
+    public function getIsPurchasedAttribute(): bool
+    {
+        return $this->purchases->contains(function ($purchase) {
+            return $purchase->company_uuid === session('company');
+        });
+    }
+
+    /**
+     * Check if current session has installed extension.
+     */
+    public function getIsInstalledAttribute(): bool
+    {
+        return $this->installs->contains(function ($purchase) {
+            return $purchase->company_uuid === session('company');
+        });
+    }
+
+    /**
+     * Get avatar URL attribute.
+     */
+    public function getIconUrlAttribute(): ?string
     {
         if ($this->icon instanceof File) {
             return $this->icon->url;
@@ -258,10 +307,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the current bundle public ID.
-     *
-     * @return string
      */
-    public function getCurrentBundlePublicIdAttribute()
+    public function getCurrentBundlePublicIdAttribute(): ?string
     {
         if ($this->currentBundle instanceof RegistryExtensionBundle) {
             return $this->currentBundle->public_id;
@@ -272,10 +319,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the current bundle ID.
-     *
-     * @return string
      */
-    public function getCurrentBundleIdAttribute()
+    public function getCurrentBundleIdAttribute(): ?string
     {
         if ($this->currentBundle instanceof RegistryExtensionBundle) {
             return $this->currentBundle->bundle_id;
@@ -286,10 +331,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the current bundle original filename.
-     *
-     * @return string
      */
-    public function getCurrentBundleFilenameAttribute()
+    public function getCurrentBundleFilenameAttribute(): ?string
     {
         if ($this->currentBundle instanceof RegistryExtensionBundle) {
             return $this->currentBundle->bundle_filename;
@@ -300,10 +343,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the next bundle public ID.
-     *
-     * @return string
      */
-    public function getNextBundlePublicIdAttribute()
+    public function getNextBundlePublicIdAttribute(): ?string
     {
         if ($this->nextBundle instanceof RegistryExtensionBundle) {
             return $this->nextBundle->public_id;
@@ -314,10 +355,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the next bundle ID.
-     *
-     * @return string
      */
-    public function getNextBundleIdAttribute()
+    public function getNextBundleIdAttribute(): ?string
     {
         if ($this->nextBundle instanceof RegistryExtensionBundle) {
             return $this->nextBundle->bundle_id;
@@ -328,10 +367,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the current bundle original filename.
-     *
-     * @return string
      */
-    public function getNextBundleFilenameAttribute()
+    public function getNextBundleFilenameAttribute(): ?string
     {
         if ($this->nextBundle instanceof RegistryExtensionBundle) {
             return $this->nextBundle->bundle_filename;
@@ -342,10 +379,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the extension's category.
-     *
-     * @return string
      */
-    public function getCategoryNameAttribute()
+    public function getCategoryNameAttribute(): ?string
     {
         if ($this->category instanceof Category) {
             return $this->category->name;
@@ -356,10 +391,8 @@ class RegistryExtension extends Model
 
     /**
      * Get the extension's category.
-     *
-     * @return string
      */
-    public function getPublisherNameAttribute()
+    public function getPublisherNameAttribute(): ?string
     {
         if ($this->company instanceof Company) {
             return $this->company->name;
@@ -487,5 +520,137 @@ class RegistryExtension extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Retrieves or creates a Stripe product associated with this model instance.
+     *
+     * This method attempts to fetch a Stripe product based on an existing 'stripe_product_id'.
+     * If no product is found or if 'stripe_product_id' is not set, it creates a new Stripe product
+     * with the current model's name and description and updates the model's 'stripe_product_id'.
+     *
+     * @return \Stripe\Product|null returns the Stripe Product object if successful, or null if the Stripe client is not available
+     */
+    public function getStripeProduct(): ?\Stripe\Product
+    {
+        $stripe = Utils::getStripeClient();
+        if ($stripe) {
+            $product = $this->stripe_product_id ? $stripe->products->retrieve($this->stripe_product_id, []) : null;
+            if (!$product) {
+                $product = $stripe->products->create(['name' => $this->name, 'description' => $this->description, 'metadata' => ['fleetbase_id' => $this->public_id]]);
+            }
+
+            // Update stripe product id
+            $this->update(['stripe_product_id' => $product->id]);
+
+            return $product;
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the active Stripe price for the associated product.
+     *
+     * This method first ensures the product exists in Stripe by calling getStripeProduct().
+     * It then fetches the current active price for the product. If no active prices are found,
+     * it returns null.
+     *
+     * @return \Stripe\Price|null returns the Stripe Price object if available, or null otherwise
+     */
+    public function getStripePrice(): ?\Stripe\Price
+    {
+        if (!$this->stripe_product_id) {
+            $this->getStripeProduct();
+        }
+
+        $stripe = Utils::getStripeClient();
+        $price  = null;
+        if ($stripe) {
+            $prices = $stripe->prices->all(['product' => $this->stripe_product_id, 'limit' => 1, 'active' => true]);
+            $price  = is_array($prices->data) && count($prices->data) ? $prices->data[0] : null;
+        }
+
+        return $price;
+    }
+
+    /**
+     * Updates the existing active Stripe price to inactive and creates a new Stripe price.
+     *
+     * This method first retrieves the current active price and deactivates it if it exists.
+     * It then creates a new price with the current model's price and currency, associated with
+     * the Stripe product.
+     *
+     * @return \Stripe\Price|null returns the newly created Stripe Price object
+     */
+    public function updateOrCreateStripePrice(): ?\Stripe\Price
+    {
+        $stripe = Utils::getStripeClient();
+        $price  = $this->getStripePrice();
+        if ($price instanceof \Stripe\Price) {
+            // update stripe price
+            $stripe->prices->update($price->id, ['active' => false]);
+        }
+
+        // create new stripe price
+        $price = $stripe->prices->create(['unit_amount' => $this->price, 'currency' => $this->currency, 'product' => $this->stripe_product_id]);
+
+        return $price;
+    }
+
+    /**
+     * Creates a Stripe Checkout session for purchasing this model's associated product.
+     *
+     * This method ensures that the model has a valid company (extension author) and an active price.
+     * It calculates the facilitator fee based on the total amount and creates a checkout session with
+     * the necessary Stripe configurations, including the return URI with query parameters.
+     *
+     * @param string $returnUri the URI to which the user should be returned after the checkout process
+     *
+     * @return \Stripe\Checkout\Session returns the Stripe Checkout Session object
+     *
+     * @throws \Exception throws an exception if the model does not have an associated company or price
+     */
+    public function createStripeCheckoutSession(string $returnUri): \Stripe\Checkout\Session
+    {
+        // Get extension author
+        $extensionAuthor = $this->company;
+        if (!$extensionAuthor) {
+            throw new \Exception('The extension you attempted to purchase is not available for purchase at this time.');
+        }
+
+        // Get the extension price from stripe
+        $price = $this->getStripePrice();
+        if (!$price) {
+            throw new \Exception('The extension you attempted to purchase is not available for purchase at this time.');
+        }
+
+        // Calculate the fee fleetbase takes for faciliation of extension
+        $totalAmount    = $price->unit_amount;
+        $facilitatorFee = SupportUtils::calculatePercentage(config('registry-bridge.facilitator_fee', 10), $totalAmount);
+
+        // Get the stripe client to create the checkout session
+        $stripe          = Utils::getStripeClient();
+
+        // Create the stripe checkout session
+        $checkoutSession = $stripe->checkout->sessions->create([
+            'ui_mode'    => 'embedded',
+            'line_items' => [
+                [
+                    'price'    => $price->id,
+                    'quantity' => 1,
+                ],
+            ],
+            'mode'                => 'payment',
+            'return_url'          => SupportUtils::consoleUrl($returnUri) . '?extension_id=' . $this->uuid . '&checkout_session_id={CHECKOUT_SESSION_ID}',
+            'payment_intent_data' => [
+                'application_fee_amount' => $facilitatorFee,
+                'transfer_data'          => [
+                    'destination' => $extensionAuthor->stripe_connect_id,
+                ],
+            ],
+        ]);
+
+        return $checkoutSession;
     }
 }

@@ -34,6 +34,13 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                 $router->post('check-access', 'RegistryAuthController@checkAccess');
                 $router->post('check-publish', 'RegistryAuthController@checkPublishAllowed');
             });
+            $router->group(['prefix' => 'payments'], function ($router) {
+                $router->post('account', 'RegistryPaymentsController@getStripeAccount');
+                $router->post('account-session', 'RegistryPaymentsController@getStripeAccountSession');
+                $router->get('has-stripe-connect-account', 'RegistryPaymentsController@hasStripeConnectAccount');
+                $router->post('create-checkout-session', 'RegistryPaymentsController@createStripeCheckoutSession');
+                $router->post('get-checkout-session', 'RegistryPaymentsController@getStripeCheckoutSessionStatus');
+            });
             $router->fleetbaseRoutes('registry-extensions', function ($router, $controller) {
                 $router->post('{id}/submit', $controller('submit'));
                 $router->post('approve', $controller('approve'));

@@ -11,15 +11,17 @@ export default class DevelopersExtensionsEditController extends Controller {
     @service notifications;
     @service intl;
     @tracked isReady = false;
+    @tracked isReadyMessage = null;
 
     @task *save() {
         try {
             yield this.model.save();
+            this.notifications.success('Extension details saved.');
             const isReady = this.validateExtensionForReview();
             if (isReady === true) {
                 this.isReady = isReady;
             } else if (isArray(isReady) && isReady.length) {
-                this.notifications.warning(isReady[0]);
+                this.isReadyMessage = isReady[0];
             }
         } catch (error) {
             this.notifications.warning(error.message);

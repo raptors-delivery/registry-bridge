@@ -1,0 +1,17 @@
+<Layout::Section::Header @title="Payments" />
+
+<Layout::Section::Body class="overflow-y-scroll h-full">
+    {{#unless this.hasStripeConnectAccount}}
+        <div class="container">
+            <div class="max-w-3xl mx-auto mt-4">
+                <div class="content">
+                    <div class="flex flex-col items-center justify-center">
+                        <h1 class="text-lg font-semibold mb-1">Your account is not setup to accept payments yet.</h1>
+                        <p class="text-sm mb-2">To accept payments for extensions, you must complete the onboard process via Stripe.</p>
+                        <Button @type="primary" @size="lg" @text="Start payments onboard" @onClick={{transition-to "developers.payments.onboard"}} />
+                    </div>
+                </div>
+            </div>
+        </div>
+    {{/unless}}
+</Layout::Section::Body>

@@ -38,12 +38,14 @@
         "publish:github": "npm config set '@fleetbase:registry' https://npm.pkg.github.com/ && npm publish --access restricted"
     },
     "dependencies": {
+        "@babel/core": "^7.23.2",
         "@fleetbase/ember-core": "^0.2.12",
         "@fleetbase/ember-ui": "^0.2.18",
-        "@babel/core": "^7.23.2",
         "@fortawesome/ember-fontawesome": "^0.4.1",
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
         "@fortawesome/free-solid-svg-icons": "^6.5.2",
+        "@stripe/connect-js": "^3.3.10",
+        "ember-auto-import": "^2.6.3",
         "ember-cli-babel": "^8.2.0",
         "ember-cli-htmlbars": "^6.3.0",
         "ember-intl": "6.3.2",
@@ -62,7 +64,6 @@
         "broccoli-asset-rev": "^3.0.0",
         "broccoli-funnel": "^3.0.8",
         "concurrently": "^8.2.2",
-        "ember-auto-import": "^2.6.3",
         "ember-cli": "~5.4.1",
         "ember-cli-clean-css": "^3.0.0",
         "ember-cli-dependency-checker": "^3.3.2",

@@ -19,6 +19,12 @@ dependencies:
   '@fortawesome/free-solid-svg-icons':
     specifier: ^6.5.2
     version: 6.5.2
+  '@stripe/connect-js':
+    specifier: ^3.3.10
+    version: 3.3.10
+  ember-auto-import:
+    specifier: ^2.6.3
+    version: 2.6.3(webpack@5.89.0)
   ember-cli-babel:
     specifier: ^8.2.0
     version: 8.2.0(@babel/core@7.23.2)
@@ -69,9 +75,6 @@ devDependencies:
   concurrently:
     specifier: ^8.2.2
     version: 8.2.2
-  ember-auto-import:
-    specifier: ^2.6.3
-    version: 2.6.3(webpack@5.89.0)
   ember-cli:
     specifier: ~5.4.1
     version: 5.4.1
@@ -3365,6 +3368,10 @@ packages:
   /@socket.io/component-emitter@3.1.2:
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
     dev: true
+
+  /@stripe/connect-js@3.3.10:
+    resolution: {integrity: sha512-x/z7BUnJXuUq0eLLzfL7NusxnsEYcGGzS46JTXwmdcFS9xYCWJJTI+9kgEROfXaZuD2RVOUw6RIu/l8YvsEijw==}
+    dev: false
 
   /@szmarczak/http-timer@1.1.2:
     resolution: {integrity: sha512-XIB2XbzHTN6ieIjfIMV9hlVcfPU26s2vafYWQcZHWXHOxiaRZYEDKEwdl129Zyg50+foYV2jCgtrqSA6qNuNSA==}

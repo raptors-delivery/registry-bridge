@@ -1,4 +1,10 @@
-<button type="button" class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50 {{@buttonClass}}" ...attributes {{on "click" this.onClick}}>
+<button
+    type="button"
+    class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50 {{@buttonClass}}"
+    ...attributes
+    {{on "click" this.onClick}}
+    {{did-update this.onExtensionUpdated @extension}}
+>
     <div class="flex items-center justify-center rounded-t-lg w-full h-36 {{@iconWrapperClass}}" {{background-url @extension.icon_url overlay=true}}>
         <Image src={{@extension.icon_url}} class="w-full h-36 rounded-t-lg {{@iconClass}}" alt={{@extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
     </div>

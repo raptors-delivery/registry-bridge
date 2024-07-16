@@ -22,6 +22,7 @@ return new class extends Migration
             $table->uuid('icon_uuid')->nullable();
             $table->uuid('category_uuid')->nullable();
             $table->string('public_id')->nullable()->index();
+            $table->string('stripe_product_id')->nullable();
             $table->string('name');
             $table->string('subtitle')->nullable();
             $table->boolean('payment_required')->default(0);

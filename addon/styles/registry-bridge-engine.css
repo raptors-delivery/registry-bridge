@@ -62,3 +62,28 @@ body[data-theme='dark'] .flb--extension-screenshot {
         0 10px 15px -3px rgb(0 0 0 / 10%),
         0 4px 6px -4px rgb(0 0 0 / 10%);
 }
+
+body[data-theme='dark'] .flb--modal.flb--default-modal.finalize-extension-purchase,
+body[data-theme='light'] .flb--modal.flb--default-modal.finalize-extension-purchase,
+.flb--modal.flb--default-modal.finalize-extension-purchase {
+    pointer-events: none !important;
+}
+
+.flb--modal.flb--default-modal.finalize-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header button.close,
+body[data-theme='dark'] .flb--modal.flb--default-modal.finalize-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header button.close,
+body[data-theme='light'] .flb--modal.flb--default-modal.finalize-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header button.close {
+    display: none !important;
+    pointer-events: none;
+}
+
+.flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content,
+body[data-theme='dark'] .flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content,
+body[data-theme='light'] .flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content {
+    background-color: #fff;
+}
+
+.flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header,
+body[data-theme='dark'] .flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header,
+body[data-theme='light'] .flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header {
+    display: none !important;
+}
