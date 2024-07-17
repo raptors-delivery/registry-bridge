@@ -74,7 +74,7 @@ export default class InstalledController extends Controller {
                         () => {
                             window.location.reload(true);
                         },
-                        1000 * 2
+                        600
                     );
                     modal.done();
                 } catch (error) {

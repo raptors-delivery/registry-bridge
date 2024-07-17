@@ -6,7 +6,7 @@
             {{#each @model as |extension|}}
                 <div class="extension-card-container">
                     <div class="extension-card-icon-container">
-                        <Image src={{extension.icon_url}} class="w-full h-36 rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
+                        <Image src={{extension.icon_url}} alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
                     </div>
                     <div class="extension-card-body-container">
                         <div class="flex flex-col">
