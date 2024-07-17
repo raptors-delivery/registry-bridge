@@ -22,8 +22,7 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
          */
         $router->group(['prefix' => config('internals.api.routing.internal_prefix', 'v1'), 'namespace' => 'Internal\v1'], function ($router) {
             $router->get('categories', 'RegistryController@categories');
-            $router->get('load-installed-engines', 'RegistryController@loadInstalledEngines');
-            $router->get('load-engine-manifest/{extensionId}', 'RegistryController@loadEngineManifest');
+            $router->get('engines', 'RegistryController@getInstalledEngines');
             $router->group(['prefix' => 'installer'], function ($router) {
                 $router->post('install', 'ExtensionInstallerController@install');
                 $router->post('uninstall', 'ExtensionInstallerController@uninstall');
@@ -40,13 +39,16 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                 $router->get('has-stripe-connect-account', 'RegistryPaymentsController@hasStripeConnectAccount');
                 $router->post('create-checkout-session', 'RegistryPaymentsController@createStripeCheckoutSession');
                 $router->post('get-checkout-session', 'RegistryPaymentsController@getStripeCheckoutSessionStatus');
+                $router->get('author-received', 'RegistryPaymentsController@getAuthorReceivedPayments');
             });
             $router->fleetbaseRoutes('registry-extensions', function ($router, $controller) {
                 $router->post('{id}/submit', $controller('submit'));
                 $router->post('approve', $controller('approve'));
                 $router->post('reject', $controller('reject'));
                 $router->get('download-bundle', $controller('downloadBundle'));
+                $router->get('analytics', $controller('analytics'));
                 $router->get('installed', $controller('installed'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
+                $router->get('purchased', $controller('purchased'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
             });
             $router->fleetbaseRoutes('registry-extension-bundles', function ($router, $controller) {
                 $router->get('download', $controller('download'));

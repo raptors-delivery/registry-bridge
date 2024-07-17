@@ -7,6 +7,7 @@ use Fleetbase\RegistryBridge\Http\Controllers\RegistryBridgeController;
 use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionRequest;
 use Fleetbase\RegistryBridge\Http\Requests\RegistryExtensionActionRequest;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
+use Fleetbase\Support\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -72,6 +73,72 @@ class RegistryExtensionController extends RegistryBridgeController
         $this->resource::wrap('registryExtensions');
 
         return $this->resource::collection($installedExtensions);
+    }
+
+    /**
+     * Display a list of purchased extensions for the current company.
+     *
+     * This function retrieves all extensions that are purchased for the company
+     * identified by the `company_uuid` stored in the session. It disables the cache
+     * for the `RegistryExtension` model to ensure fresh data is fetched from the database.
+     *
+     * The extensions are filtered based on their association with any purchase
+     * record that matches the `company_uuid` from the session. The resulting collection
+     * of purchased extensions is then wrapped and returned as a resource collection.
+     *
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection the collection of purchased extensions wrapped as a resource
+     */
+    public function purchased()
+    {
+        $purchasedExtensions = RegistryExtension::disableCache()->whereHas('purchases', function ($query) {
+            $query->where('company_uuid', session('company'));
+        })->get();
+
+        $this->resource::wrap('registryExtensions');
+
+        return $this->resource::collection($purchasedExtensions);
+    }
+
+    /**
+     * Retrieve analytics for a specific registry extension.
+     *
+     * This method fetches analytics for a registry extension identified by
+     * the provided ID. It gathers various metrics, including the number of
+     * installs, uninstalls, purchases, and the total purchase amount. If the
+     * extension cannot be found, it returns an error response. Otherwise, it
+     * returns the collected metrics as a JSON response.
+     *
+     * @param Request $request
+     *                         The incoming request instance containing the extension ID
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *                                       A JSON response containing the collected analytics metrics or an error message
+     */
+    public function analytics(Request $request)
+    {
+        $id        = $request->input('id');
+        $extension = RegistryExtension::find($id);
+        if (!$extension) {
+            return response()->error('Unable to find extension to fetch analytics.');
+        }
+
+        $metrics = [];
+
+        // Get number of installs
+        $metrics['install_count'] = $extension->installs()->count();
+
+        // Get number of uninstalls
+        $metrics['uninstall_count'] = $extension->installs()->withoutGlobalScopes()->whereNotNull('deleted_at')->count();
+
+        // Get number of purchases
+        $metrics['purchase_count'] = $extension->purchases()->count();
+
+        // Get total amount in purchases
+        $totalPurchaseAmount        = $extension->purchases()->get()->sum('locked_price');
+        $metrics['purchase_amount'] = Utils::moneyFormat($totalPurchaseAmount, $extension->currency);
+
+        // Respond with metrics
+        return response()->json($metrics);
     }
 
     /**

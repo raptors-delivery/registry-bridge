@@ -31,6 +31,8 @@ registry-bridge:
       no-extensions-awaiting-review: No extensions awaiting review
   installed:
     title: Installed Extensions
+  purchased:
+    title: Purchased Extensions
   developers:
     extensions:
       extensions: Extensions

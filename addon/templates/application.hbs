@@ -1,5 +1,6 @@
 <EmberWormhole @to="sidebar-menu-items">
     <Layout::Sidebar::Item @route="console.extensions.installed" @icon="inbox">Installed</Layout::Sidebar::Item>
+    <Layout::Sidebar::Item @route="console.extensions.purchased" @icon="bag-shopping">Purchased</Layout::Sidebar::Item>
     <Layout::Sidebar::Panel @open={{true}} @title="Explore">
         <Layout::Sidebar::Item @route="console.extensions.explore.index" @icon="shapes">Explore All</Layout::Sidebar::Item>
         {{#each this.categories as |category|}}

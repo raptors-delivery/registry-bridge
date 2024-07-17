@@ -5,6 +5,9 @@
  * Fleetbase Core API Configuration
  * -------------------------------------------
  */
+
+use Fleetbase\Support\Utils;
+
 return [
     'api' => [
         'version' => '0.0.1',
@@ -23,7 +26,7 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
     'extensions' => [
-        'preinstalled' => env('PREINSTALLED_EXTENSIONS', false)
+        'preinstalled' => Utils::castBoolean(env('REGISTRY_PREINSTALLED_EXTENSIONS', false))
     ],
     'facilitator_fee' => env('REGISTRY_FACILITATOR_FEE', 10)
 ];

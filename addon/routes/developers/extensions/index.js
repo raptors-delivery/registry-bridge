@@ -5,6 +5,6 @@ export default class DevelopersExtensionsIndexRoute extends Route {
     @service store;
 
     model() {
-        return this.store.findAll('registry-extension');
+        return this.store.query('registry-extension', { is_author: 1 });
     }
 }

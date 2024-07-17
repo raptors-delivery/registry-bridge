@@ -87,3 +87,55 @@ body[data-theme='dark'] .flb--modal.flb--default-modal.stripe-extension-purchase
 body[data-theme='light'] .flb--modal.flb--default-modal.stripe-extension-purchase > .flb--modal-dialog > .flb--modal-content > .flb--modal-header {
     display: none !important;
 }
+
+.extension-card-container {
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 5%);
+    width: 11rem;
+}
+
+body[data-theme='dark'] .extension-card-container {
+    border-color: #4b5563;
+}
+
+.extension-card-container > .extension-card-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem 0.5rem 0 0;
+    width: 100%;
+    height: 10rem;
+}
+
+.extension-card-container > .extension-card-icon-container > img {
+    width: 100%;
+    height: 10rem;
+    object-fit: cover;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.extension-card-container > .extension-card-body-container {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    background-color: white;
+    border-top: 1px solid #e5e7eb;
+}
+
+body[data-theme='dark'] .extension-card-container > .extension-card-body-container {
+    border-top-color: #4b5563;
+    background-color: #111827;
+}
+
+.extension-card-grid-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    margin-left: -2rem;
+}
+
+.extension-card-grid-container > * {
+    margin-left: 2rem;
+    margin-bottom: 2rem;
+}

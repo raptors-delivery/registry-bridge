@@ -26,6 +26,11 @@ class RegistryExtensionFilter extends Filter
         $this->builder->search($searchQuery);
     }
 
+    public function isAuthor()
+    {
+        $this->builder->where('company_uuid', session('company'));
+    }
+
     public function explore()
     {
         $this->builder->where('status', 'published');

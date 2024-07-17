@@ -1,4 +1,4 @@
-<div class="flex flex-row" ...attributes>
+<div class="flex flex-row" ...attributes {{did-update this.handleExtensionChanged @extension}}>
     <div class="modal-title--extension-icon-wrapper shadow-sm dark:border-gray-700">
         <div class="flex items-center justify-center rounded-lg w-full" {{background-url this.extension.icon_url overlay=true}}>
             <Image src={{this.extension.icon_url}} class="w-full rounded-lg" alt={{this.extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />

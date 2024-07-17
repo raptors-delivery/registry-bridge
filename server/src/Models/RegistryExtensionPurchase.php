@@ -6,6 +6,7 @@ use Fleetbase\Casts\Json;
 use Fleetbase\Casts\Money;
 use Fleetbase\Models\Company;
 use Fleetbase\Models\Model;
+use Fleetbase\Traits\HasApiModelBehavior;
 use Fleetbase\Traits\HasMetaAttributes;
 use Fleetbase\Traits\HasUuid;
 
@@ -13,6 +14,7 @@ class RegistryExtensionPurchase extends Model
 {
     use HasUuid;
     use HasMetaAttributes;
+    use HasApiModelBehavior;
 
     /**
      * The database table used by the model.

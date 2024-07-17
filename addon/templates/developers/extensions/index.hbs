@@ -4,26 +4,22 @@
 
 <Layout::Section::Body class="overflow-y-scroll h-full">
     <div class="m-auto p-8">
-        <div class="flex flex-row space-x-4">
+        <div class="extension-card-grid-container">
             {{#each (filter-by "isNew" false @model) as |extension|}}
-                <div class="mb-4">
-                    <button
-                        type="button"
-                        class="rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm w-40 hover:opacity-50"
-                        {{on "click" (transition-to "developers.extensions.edit" extension)}}
-                    >
-                        <div class="flex items-center justify-center rounded-t-lg w-full h-36" {{background-url extension.icon_url overlay=true}}>
-                            <Image src={{extension.icon_url}} class="w-full h-36 rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
+                <button type="button" class="extension-card-container hover:opacity-50" {{on "click" (transition-to "developers.extensions.edit" extension)}}>
+                    <div class="extension-card-icon-container">
+                        <Image src={{extension.icon_url}} class="w-full h-36 rounded-t-lg" alt={{extension.name}} @fallbackSrc={{config "defaultValues.extensionIcon"}} />
+                    </div>
+                    <div class="extension-card-body-container">
+                        <div class="flex flex-col">
+                            <div class="font-semibold text-sm block">{{extension.name}}</div>
+                            <div class="text-xs truncate">{{n-a extension.description}}</div>
                         </div>
-                        <div class="text-left px-3 py-2 rounded-b-lg bg-white border-t border-gray-200 dark:border-gray-700 dark:bg-gray-900">
-                            <span class="font-semibold text-sm block">{{extension.name}}</span>
-                            <p class="text-xs truncate">{{n-a extension.description}}</p>
-                            <div>
-                                <Badge @status={{extension.status}} />
-                            </div>
+                        <div>
+                            <Badge @status={{extension.status}} />
                         </div>
-                    </button>
-                </div>
+                    </div>
+                </button>
             {{/each}}
         </div>
     </div>

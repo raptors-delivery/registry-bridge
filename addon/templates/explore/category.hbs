@@ -2,11 +2,9 @@
 
 <Layout::Section::Body class="overflow-y-scroll h-full">
     <div class="m-auto p-8">
-        <div class="flex flex-row space-x-4">
+        <div class="extension-card-grid-container">
             {{#each this.extensions as |extension|}}
-                <div class="mb-4">
-                    <ExtensionCard @extension={{extension}} />
-                </div>
+                <ExtensionCard @extension={{extension}} />
             {{/each}}
         </div>
     </div>

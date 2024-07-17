@@ -105,7 +105,7 @@ export default class ExtensionCardComponent extends Component {
                         () => {
                             window.location.reload(true);
                         },
-                        1200
+                        1000 * 2
                     );
                     removeParamFromCurrentUrl('extension_id');
                     modal.done();

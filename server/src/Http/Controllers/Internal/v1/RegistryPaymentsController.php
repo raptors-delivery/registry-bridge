@@ -3,6 +3,7 @@
 namespace Fleetbase\RegistryBridge\Http\Controllers\Internal\v1;
 
 use Fleetbase\Http\Controllers\Controller;
+use Fleetbase\Http\Resources\FleetbaseResource;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
 use Fleetbase\RegistryBridge\Models\RegistryExtensionPurchase;
 use Fleetbase\RegistryBridge\Support\Utils;
@@ -193,5 +194,34 @@ class RegistryPaymentsController extends Controller
         } catch (\Error $e) {
             return response()->error($e->getMessage());
         }
+    }
+
+    public function getAuthorReceivedPayments(Request $request)
+    {
+        $limit     = $request->input('limit', 30);
+        $query     = RegistryExtensionPurchase::whereHas(
+            'extension',
+            function ($query) {
+                $query->where('company_uuid', session('company'));
+            }
+        )->with(
+            [
+                'extension' => function ($query) {
+                    $query->select(['uuid', 'public_id', 'name', 'category_uuid']);
+                    $query->with(['category']);
+                },
+                'company' => function ($query) {
+                    $query->select(['uuid', 'name'])->withoutGlobalScopes();
+                },
+            ]
+        );
+
+        // Handle sorting
+        app(RegistryExtensionPurchase::class)->applySorts($request, $query);
+
+        $payments                   = $query->fastPaginate($limit);
+        $totalPurchaseAmount        = $query->get()->sum('locked_price');
+
+        return FleetbaseResource::collection($payments)->additional(['total_amount' => $totalPurchaseAmount]);
     }
 }
