@@ -39,7 +39,7 @@
     },
     "dependencies": {
         "@babel/core": "^7.23.2",
-        "@fleetbase/ember-core": "^0.2.12",
+        "@fleetbase/ember-core": "^0.2.13",
         "@fleetbase/ember-ui": "^0.2.18",
         "@fortawesome/ember-fontawesome": "^0.4.1",
         "@fortawesome/fontawesome-svg-core": "^6.5.2",
