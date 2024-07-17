@@ -121,6 +121,7 @@ body[data-theme='dark'] .extension-card-container {
     border-radius: 0 0 0.5rem 0.5rem;
     background-color: white;
     border-top: 1px solid #e5e7eb;
+    min-height: 5.5rem;
 }
 
 body[data-theme='dark'] .extension-card-container > .extension-card-body-container {
