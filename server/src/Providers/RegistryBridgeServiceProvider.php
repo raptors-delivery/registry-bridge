@@ -37,7 +37,6 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      */
     public $middleware = [
         'fleetbase.registry' => [
-            'throttle:60,1',
             \Illuminate\Session\Middleware\StartSession::class,
             \Fleetbase\Http\Middleware\AuthenticateOnceWithBasicAuth::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,

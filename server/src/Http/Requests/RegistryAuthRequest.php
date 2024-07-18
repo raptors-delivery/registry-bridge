@@ -5,6 +5,7 @@ namespace Fleetbase\RegistryBridge\Http\Requests;
 use Fleetbase\Http\Requests\FleetbaseRequest;
 use Fleetbase\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 /**
  * Request class to handle the addition of new registry users.
@@ -40,7 +41,8 @@ class RegistryAuthRequest extends FleetbaseRequest
         });
 
         return [
-            'identity' => ['required', 'valid_identity'],
+            'identity' => [Rule::requiredIf($this->isNotFilled('package')), 'valid_identity'],
+            'package'  => ['nullable'],
         ];
     }
 }

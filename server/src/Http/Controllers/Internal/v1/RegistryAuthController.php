@@ -12,14 +12,12 @@ use Fleetbase\RegistryBridge\Models\RegistryExtension;
 use Fleetbase\RegistryBridge\Models\RegistryUser;
 use Fleetbase\RegistryBridge\Support\Bridge;
 use Fleetbase\Support\Auth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RegistryAuthController extends Controller
 {
-    public function test()
-    {
-        dd(Bridge::get('~/flb/extensions'));
-    }
-
     /**
      * Authenticates a registry user based on provided credentials.
      *
@@ -36,6 +34,8 @@ class RegistryAuthController extends Controller
      */
     public function authenticate(AuthenticateRegistryUserRequest $request)
     {
+        // For debug purposes
+        Log::info('Incoming authentication request from registry -> Headers: {headers} Payload: {payload}', ['headers' => $request->headers->all(), 'payload' => $request->all()]);
         $identity = $request->input('identity');
         $password = $request->input('password');
 
@@ -129,15 +129,29 @@ class RegistryAuthController extends Controller
      */
     public function checkAccess(RegistryAuthRequest $request)
     {
-        // Get identity
-        $identity    = $request->input('identity');
+        $packageName       = $request->input('package');
+        $identity          = $request->input('identity');
+        $protectedPackage  = Str::startsWith($packageName, config('registry-bridge.extensions.protected_prefixes'));
 
-        // Find user by email or username
-        $user = User::where('email', $identity)->orWhere('username', $identity)->first();
+        // If no identity and not a protected package allow access
+        if (!$identity && !$protectedPackage) {
+            return response()->json(['allowed' => true]);
+        }
 
-        // If user is not admin respond with error
-        if (!$user->isAdmin()) {
-            return response()->error('User is not allowed access to the registry.', 401);
+        // Get registry user via identity
+        $registryUser = RegistryUser::findFromUsername($identity);
+
+        // If registry user is admin allow access
+        if ($registryUser->is_admin) {
+            return response()->json(['allowed' => true]);
+        }
+
+        // Check if package is protected, if so verify user has access to package
+        if ($protectedPackage) {
+            $extension = RegistryExtension::findByPackageName($packageName);
+            if ($extension && $extension->doesntHaveAccess($registryUser)) {
+                return response()->error('This package requires payment to access.', 401);
+            }
         }
 
         // For now only admin users can access registry
@@ -171,15 +185,16 @@ class RegistryAuthController extends Controller
         $force       = $request->boolean('force');
         $password    = $request->input('password');
 
+        // Find user by email or username
+        $registryUser = RegistryUser::findFromUsername($identity);
+        if (!$registryUser) {
+            return response()->error('Attempting to publish extension with invalid user.', 401);
+        }
+
         // If force publish bypass checks, authenticate by user login
         if ($force === true) {
-            // Find user by email or username
-            $user = User::where(function ($query) use ($identity) {
-                $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
-            })->first();
-
             // Authenticate user with password
-            if (Auth::isInvalidPassword($password, $user->password)) {
+            if (Auth::isInvalidPassword($password, $registryUser->user->password)) {
                 return response()->error('Invalid credentials, unable to force publish.', 401);
             }
 
@@ -197,16 +212,10 @@ class RegistryAuthController extends Controller
             return response()->error('Attempting to publish extension which has no record.', 401);
         }
 
-        // Find user by email or username
-        $user = User::where(function ($query) use ($identity) {
-            $query->where('email', $identity)->orWhere('phone', $identity)->orWhere('username', $identity);
-        })->first();
-        if (!$user) {
-            return response()->error('Attempting to publish extension with invalid user.', 401);
-        }
-
         // If user is not admin respond with error
-        if (!$user->isAdmin()) {
+        // For now only admin is allowed to publish to registry
+        // This may change in the future with approval/reject flow
+        if ($registryUser->isNotAdmin()) {
             return response()->error('User is not allowed publish to the registry.', 401);
         }
 
@@ -226,5 +235,92 @@ class RegistryAuthController extends Controller
 
         // Passed all checks
         return response()->json(['allowed' => true]);
+    }
+
+    /**
+     * Creates a registry user by authenticating with the provided password.
+     *
+     * This method retrieves the current authenticated user and checks the provided password.
+     * If the password is valid, it logs in to the npm registry using the user's credentials,
+     * retrieves the authentication token, and associates it with the user. The registry token
+     * is stored in the database for the user's current session.
+     *
+     * @param Request $request the incoming HTTP request containing the user's password
+     *
+     * @return \Illuminate\Http\JsonResponse the JSON response containing the created RegistryUser or an error message
+     */
+    public function createRegistryUser(Request $request)
+    {
+        $password = $request->input('password');
+        if (!$password) {
+            return response()->error('Password is required.');
+        }
+
+        // Get current user
+        $user = Auth::getUserFromSession();
+        if (!$user) {
+            return response()->error('No user authenticated.');
+        }
+
+        // Authenticate user with password
+        if (Auth::isInvalidPassword($password, $user->password)) {
+            return response()->error('Invalid credentials.', 401);
+        }
+
+        // Create registry user
+        try {
+            $registryUser = Bridge::loginWithUser($user, $password);
+        } catch (\Throwable $e) {
+            return response()->json($e->getMessage());
+        }
+
+        return response()->json($registryUser);
+    }
+
+    /**
+     * Retrieves all registry tokens for the current company.
+     *
+     * This method queries the `RegistryUser` model to get all registry tokens
+     * associated with the current company's UUID from the session. It also includes
+     * user details for each registry token and returns the data as a JSON response.
+     *
+     * @return \Illuminate\Http\JsonResponse the JSON response containing a list of registry tokens with user details
+     */
+    public function getRegistryTokens()
+    {
+        $registryUsers = RegistryUser::select(
+            ['uuid', 'user_uuid', 'company_uuid', 'token', 'registry_token', 'expires_at', 'created_at']
+        )->where('company_uuid', session('company'))->with(
+            [
+                'user' => function ($query) {
+                    $query->select(['uuid', 'company_uuid', 'name', 'email']);
+                },
+            ]
+        )->get();
+
+        return response()->json($registryUsers);
+    }
+
+    /**
+     * Deletes a specific registry token by its UUID.
+     *
+     * This method deletes a registry token identified by its UUID. If the registry token
+     * does not exist, it returns an error response. If successful, it returns a JSON response
+     * with a status indicating the deletion was successful.
+     *
+     * @param string $id the UUID of the registry token to be deleted
+     *
+     * @return \Illuminate\Http\JsonResponse the JSON response indicating the status of the deletion
+     */
+    public function deleteRegistryToken(string $id)
+    {
+        $registryUser = RegistryUser::where('uuid', $id)->first();
+        if (!$registryUser) {
+            return response()->error('Registry token does not exist.');
+        }
+
+        $registryUser->delete();
+
+        return response()->json(['status' => 'ok']);
     }
 }
