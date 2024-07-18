@@ -41,6 +41,7 @@ class RegistryUser extends Model
         'company_uuid',
         'user_uuid',
         'token',
+        'registry_token',
         'scope',
         'expires_at',
         'last_used_at',
@@ -65,7 +66,7 @@ class RegistryUser extends Model
      *
      * @var array
      */
-    protected $appends = [];
+    protected $appends = ['is_admin'];
 
     /**
      * The attributes excluded from the model's JSON form.
@@ -115,6 +116,54 @@ class RegistryUser extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function extensions()
+    {
+        return $this->hasMany(RegistryExtension::class, 'company_uuid', 'company_uuid');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function purchases()
+    {
+        return $this->hasMany(RegistryExtensionPurchase::class, 'company_uuid', 'company_uuid');
+    }
+
+    /**
+     * Undocumented function.
+     */
+    public function getIsAdminAttribute(): bool
+    {
+        return $this->user->is_admin === true;
+    }
+
+    /**
+     * Determine if the user is an admin.
+     *
+     * This method checks if the `is_admin` attribute of the user is set to true.
+     *
+     * @return bool true if the user is an admin, false otherwise
+     */
+    public function isAdmin(): bool
+    {
+        return $this->is_admin === true;
+    }
+
+    /**
+     * Determine if the user is not an admin.
+     *
+     * This method checks if the `is_admin` attribute of the user is set to false.
+     *
+     * @return bool true if the user is not an admin, false otherwise
+     */
+    public function isNotAdmin(): bool
+    {
+        return $this->is_admin === false;
+    }
+
+    /**
      * Generates a unique token for authenticating with the registry.
      *
      * This method creates a token prefixed with 'flb_' and ensures its uniqueness
@@ -136,5 +185,66 @@ class RegistryUser extends Model
         } while ($tokenExists);
 
         return $token;
+    }
+
+    /**
+     * Find a registry user by their username.
+     *
+     * This method joins the users table with the registry users table to find a
+     * registry user by their email or username. If a matching user is found, the
+     * corresponding registry user is returned.
+     *
+     * @param string $username the username to search for
+     *
+     * @return RegistryUser|null the found registry user, or null if no user is found
+     */
+    public static function findFromUsername(string $username): ?RegistryUser
+    {
+        return static::select('registry_users.*')
+        ->join('users', function ($join) use ($username) {
+            $join->on('users.uuid', '=', 'registry_users.user_uuid')
+                 ->on('users.company_uuid', '=', 'registry_users.company_uuid')
+                 ->where(function ($query) use ($username) {
+                     $query->where('users.email', $username)
+                           ->orWhere('users.username', $username);
+                 });
+        })
+        ->first();
+    }
+
+    /**
+     * Determine if the registry user can access a specific package.
+     *
+     * This method checks if the package name exists in the list of purchased
+     * extensions for the user. It verifies if the package name matches either
+     * the `package.json` or `composer.json` name in the metadata of the current bundle
+     * of any purchased extension.
+     *
+     * @param string $packageName the name of the package to check access for
+     *
+     * @return bool true if the user can access the package, false otherwise
+     */
+    public function canAccessPackage(string $packageName): bool
+    {
+        return $this->purchases()->whereHas('extension', function ($query) use ($packageName) {
+            $query->whereHas('currentBundle', function ($query) use ($packageName) {
+                $query->where('meta->package.json->name', $packageName)->orWhere('meta->composer.json->name', $packageName);
+            });
+        })->exists();
+    }
+
+    /**
+     * Retrieves the user's access groups.
+     *
+     * This method returns an array of groups that the user belongs to, including
+     * the default groups (`$all` and `$authenticated`) and the names of the purchased
+     * extension groups. The purchased extension groups are obtained by calling the
+     * `getPurchasedExtensionGroups` method.
+     *
+     * @return array an array of the user's access groups, including default and purchased extension groups
+     */
+    public function groups(): array
+    {
+        return [$this->public_id];
     }
 }

@@ -653,4 +653,44 @@ class RegistryExtension extends Model
 
         return $checkoutSession;
     }
+
+    /**
+     * Determine if the registry user has access to the registry extension.
+     *
+     * This method checks if the extension requires payment. If it does not,
+     * access is granted. If payment is required, it checks if the user's company
+     * has made a purchase of the extension.
+     *
+     * @param RegistryUser $registryUser the registry user to check access for
+     *
+     * @return bool true if the user has access, false otherwise
+     */
+    public function hasAccess(RegistryUser $registryUser): bool
+    {
+        if (!$this->payment_required) {
+            return true;
+        }
+
+        return $this->purchases()->where('company_uuid', $registryUser->company_uuid)->exists();
+    }
+
+    /**
+     * Determine if the registry user does not have access to the registry extension.
+     *
+     * This method checks if the extension requires payment. If it does not,
+     * access is always denied. If payment is required, it checks if the user's
+     * company has not made a purchase of the extension.
+     *
+     * @param RegistryUser $registryUser the registry user to check access for
+     *
+     * @return bool true if the user does not have access, false otherwise
+     */
+    public function doesntHaveAccess(RegistryUser $registryUser): bool
+    {
+        if (!$this->payment_required) {
+            return false;
+        }
+
+        return $this->purchases()->where('company_uuid', $registryUser->company_uuid)->doesntExist();
+    }
 }
