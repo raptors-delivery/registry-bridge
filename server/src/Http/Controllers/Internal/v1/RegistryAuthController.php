@@ -13,7 +13,6 @@ use Fleetbase\RegistryBridge\Models\RegistryUser;
 use Fleetbase\RegistryBridge\Support\Bridge;
 use Fleetbase\Support\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class RegistryAuthController extends Controller
@@ -34,8 +33,6 @@ class RegistryAuthController extends Controller
      */
     public function authenticate(AuthenticateRegistryUserRequest $request)
     {
-        // For debug purposes
-        Log::info('Incoming authentication request from registry -> Headers: {headers} Payload: {payload}', ['headers' => $request->headers->all(), 'payload' => $request->all()]);
         $identity = $request->input('identity');
         $password = $request->input('password');
 
