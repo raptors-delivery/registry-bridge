@@ -4,7 +4,6 @@ namespace Fleetbase\RegistryBridge\Providers;
 
 use Fleetbase\Models\Setting;
 use Fleetbase\Providers\CoreServiceProvider;
-use Fleetbase\RegistryBridge\Support\Utils;
 
 if (!class_exists(CoreServiceProvider::class)) {
     throw new \Exception('Registry Bridge cannot be loaded without `fleetbase/core-api` installed!');
@@ -72,7 +71,6 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      */
     public function boot()
     {
-        Utils::bootRegistryAuth();
         $this->registerCommands();
         $this->registerMiddleware();
         $this->registerExpansionsFrom(__DIR__ . '/../Expansions');
@@ -82,6 +80,17 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
         $this->mergeConfigFromSettings();
     }
 
+    /**
+     * Merge configuration settings from the database into the application configuration.
+     *
+     * This function checks if there is a database connection available. If a connection exists,
+     * it retrieves the 'registry-bridge.registry.host' and 'registry-bridge.registry.token' values
+     * from the settings table and merges them into the application's configuration. If the settings
+     * are not available or the database connection does not exist, the function will return without
+     * making any changes.
+     *
+     * @return void
+     */
     public function mergeConfigFromSettings()
     {
         if (Setting::doesntHaveConnection()) {
