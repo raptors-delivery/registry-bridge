@@ -3,6 +3,7 @@
 namespace Fleetbase\RegistryBridge\Http\Controllers\Internal\v1;
 
 use Fleetbase\Exceptions\FleetbaseRequestValidationException;
+use Fleetbase\Http\Requests\AdminRequest;
 use Fleetbase\Models\Setting;
 use Fleetbase\RegistryBridge\Http\Controllers\RegistryBridgeController;
 use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionRequest;
@@ -262,9 +263,11 @@ class RegistryExtensionController extends RegistryBridgeController
      * This method fetches the current registry host and token from the configuration
      * settings or environment variables and returns them in a JSON response.
      *
+     * @param AdminRequest $request the incoming HTTP request containing the new host and token
+     *
      * @return \Illuminate\Http\JsonResponse a JSON response containing the registry host and token
      */
-    public function getConfig()
+    public function getConfig(AdminRequest $request)
     {
         $registryHost     = config('registry-bridge.registry.host', env('REGISTRY_HOST', 'https://registry.fleetbase.io'));
         $registryToken    = config('registry-bridge.registry.token', env('REGISTRY_TOKEN'));
@@ -282,11 +285,11 @@ class RegistryExtensionController extends RegistryBridgeController
      * If no input is provided, it uses the current configuration values or environment variables.
      * The updated configuration is then saved in the settings and returned in a JSON response.
      *
-     * @param Request $request the incoming HTTP request containing the new host and token
+     * @param AdminRequest $request the incoming HTTP request containing the new host and token
      *
      * @return \Illuminate\Http\JsonResponse a JSON response containing the updated registry host and token
      */
-    public function saveConfig(Request $request)
+    public function saveConfig(AdminRequest $request)
     {
         $currentRegistryHost     = config('registry-bridge.registry.host', env('REGISTRY_HOST', 'https://registry.fleetbase.io'));
         $currentRegistryToken    = config('registry-bridge.registry.token', env('REGISTRY_TOKEN'));
