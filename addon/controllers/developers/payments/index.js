@@ -28,6 +28,7 @@ export default class DevelopersPaymentsIndexController extends Controller {
         {
             label: 'Amount',
             valuePath: 'locked_price',
+            cellComponent: 'table/cell/currency',
             width: '20%',
         },
         {
