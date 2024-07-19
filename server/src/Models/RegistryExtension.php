@@ -10,7 +10,6 @@ use Fleetbase\Models\File;
 use Fleetbase\Models\Model;
 use Fleetbase\Models\User;
 use Fleetbase\RegistryBridge\Support\Utils;
-use Fleetbase\Support\Utils as SupportUtils;
 use Fleetbase\Traits\HasApiModelBehavior;
 use Fleetbase\Traits\HasMetaAttributes;
 use Fleetbase\Traits\HasPublicId;
@@ -627,7 +626,7 @@ class RegistryExtension extends Model
 
         // Calculate the fee fleetbase takes for faciliation of extension
         $totalAmount    = $price->unit_amount;
-        $facilitatorFee = SupportUtils::calculatePercentage(config('registry-bridge.facilitator_fee', 10), $totalAmount);
+        $facilitatorFee = Utils::calculatePercentage(config('registry-bridge.facilitator_fee', 10), $totalAmount);
 
         // Get the stripe client to create the checkout session
         $stripe          = Utils::getStripeClient();
@@ -642,7 +641,7 @@ class RegistryExtension extends Model
                 ],
             ],
             'mode'                => 'payment',
-            'return_url'          => SupportUtils::consoleUrl($returnUri) . '?extension_id=' . $this->uuid . '&checkout_session_id={CHECKOUT_SESSION_ID}',
+            'return_url'          => Utils::consoleUrl($returnUri) . '?extension_id=' . $this->uuid . '&checkout_session_id={CHECKOUT_SESSION_ID}',
             'payment_intent_data' => [
                 'application_fee_amount' => $facilitatorFee,
                 'transfer_data'          => [

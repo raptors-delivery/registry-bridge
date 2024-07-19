@@ -88,7 +88,7 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
             return;
         }
 
-        $registryHost = Setting::getByKey('registry-bridge.registry.host');
+        $registryHost  = Setting::getByKey('registry-bridge.registry.host');
         $registryToken = Setting::getByKey('registry-bridge.registry.token');
 
         if ($registryHost) {
