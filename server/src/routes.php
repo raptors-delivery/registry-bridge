@@ -26,6 +26,7 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                     $router->post('registry-tokens', 'RegistryAuthController@createRegistryUser');
                 });
 
+                $router->post('composer-auth', 'RegistryAuthController@composerAuthentication')->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
                 $router->post('authenticate', 'RegistryAuthController@authenticate')->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
                 $router->post('add-user', 'RegistryAuthController@addUser')->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
                 $router->post('check-access', 'RegistryAuthController@checkAccess')->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
@@ -58,6 +59,8 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                     $router->get('analytics', $controller('analytics'));
                     $router->get('installed', $controller('installed'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
                     $router->get('purchased', $controller('purchased'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
+                    $router->get('config', $controller('getConfig'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
+                    $router->post('config', $controller('saveConfig'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
                 });
 
                 $router->fleetbaseRoutes('registry-extension-bundles', function ($router, $controller) {

@@ -3,6 +3,7 @@ import loadInitializers from 'ember-load-initializers';
 import Resolver from 'ember-resolver';
 import config from './config/environment';
 import services from '@fleetbase/ember-core/exports/services';
+import RegistryAdminConfigComponent from './components/registry-admin-config';
 import ExtensionReviewerControlComponent from './components/extension-reviewer-control';
 import ExtensionPendingPublishViewerComponent from './components/extension-pending-publish-viewer';
 
@@ -24,12 +25,17 @@ export default class RegistryBridgeEngine extends Engine {
             'Extensions Registry',
             [
                 {
-                    title: 'Extensions Awaiting Review',
+                    title: 'Registry Config',
+                    icon: 'gear',
+                    component: RegistryAdminConfigComponent,
+                },
+                {
+                    title: 'Awaiting Review',
                     icon: 'gavel',
                     component: ExtensionReviewerControlComponent,
                 },
                 {
-                    title: 'Extensions Pending Publish',
+                    title: 'Pending Publish',
                     icon: 'rocket',
                     component: ExtensionPendingPublishViewerComponent,
                 },
