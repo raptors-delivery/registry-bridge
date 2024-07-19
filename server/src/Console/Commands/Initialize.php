@@ -2,7 +2,7 @@
 
 namespace Fleetbase\RegistryBridge\Console\Commands;
 
-use Fleetbase\RegistryBridge\Providers\RegistryBridgeServiceProvider;
+use Fleetbase\RegistryBridge\Support\Utils;
 use Illuminate\Console\Command;
 
 class Initialize extends Command
@@ -28,7 +28,7 @@ class Initialize extends Command
      */
     public function handle()
     {
-        RegistryBridgeServiceProvider::bootRegistryAuth(true);
+        Utils::bootRegistryAuth(true);
 
         return 0;
     }
