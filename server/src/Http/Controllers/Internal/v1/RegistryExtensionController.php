@@ -3,11 +3,12 @@
 namespace Fleetbase\RegistryBridge\Http\Controllers\Internal\v1;
 
 use Fleetbase\Exceptions\FleetbaseRequestValidationException;
+use Fleetbase\Models\Setting;
 use Fleetbase\RegistryBridge\Http\Controllers\RegistryBridgeController;
 use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionRequest;
 use Fleetbase\RegistryBridge\Http\Requests\RegistryExtensionActionRequest;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
-use Fleetbase\Support\Utils;
+use Fleetbase\RegistryBridge\Support\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -253,5 +254,62 @@ class RegistryExtensionController extends RegistryBridgeController
         }
 
         return response()->error('Failed to download extension bundle');
+    }
+
+    /**
+     * Retrieve the current registry configuration.
+     *
+     * This method fetches the current registry host and token from the configuration
+     * settings or environment variables and returns them in a JSON response.
+     *
+     * @return \Illuminate\Http\JsonResponse a JSON response containing the registry host and token
+     */
+    public function getConfig()
+    {
+        $registryHost     = config('registry-bridge.registry.host', env('REGISTRY_HOST', 'https://registry.fleetbase.io'));
+        $registryToken    = config('registry-bridge.registry.token', env('REGISTRY_TOKEN'));
+
+        return response()->json([
+            'host'  => $registryHost,
+            'token' => $registryToken,
+        ]);
+    }
+
+    /**
+     * Save the registry configuration.
+     *
+     * This method updates the registry host and token based on the provided request input.
+     * If no input is provided, it uses the current configuration values or environment variables.
+     * The updated configuration is then saved in the settings and returned in a JSON response.
+     *
+     * @param Request $request the incoming HTTP request containing the new host and token
+     *
+     * @return \Illuminate\Http\JsonResponse a JSON response containing the updated registry host and token
+     */
+    public function saveConfig(Request $request)
+    {
+        $currentRegistryHost     = config('registry-bridge.registry.host', env('REGISTRY_HOST', 'https://registry.fleetbase.io'));
+        $currentRegistryToken    = config('registry-bridge.registry.token', env('REGISTRY_TOKEN'));
+        $registryHost            = $request->input('host', $currentRegistryHost);
+        $registryToken           = $request->input('token', $currentRegistryToken);
+
+        // Save values in settings and config
+        if ($registryHost) {
+            Setting::configure('registry-bridge.registry.host', $registryHost);
+            config(['registry-bridge.registry.host' => $registryHost]);
+        }
+
+        if ($registryToken) {
+            Setting::configure('registry-bridge.registry.token', $registryToken);
+            config(['registry-bridge.registry.token' => $registryToken]);
+        }
+
+        // Reboot registry auth
+        Utils::bootRegistryAuth(true);
+
+        return response()->json([
+            'host'  => $registryHost,
+            'token' => $registryToken,
+        ]);
     }
 }

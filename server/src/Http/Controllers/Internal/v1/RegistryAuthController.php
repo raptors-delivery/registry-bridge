@@ -18,6 +18,52 @@ use Illuminate\Support\Str;
 class RegistryAuthController extends Controller
 {
     /**
+     * Handle Composer authentication and return a list of unauthorized packages.
+     *
+     * This function authenticates the user based on the provided registry token.
+     * If the token is valid, it returns a list of packages that the user is not authorized to access.
+     *
+     * @param Request $request the incoming HTTP request containing the registry token
+     *
+     * @return \Illuminate\Http\JsonResponse a JSON response containing the status and a list of unauthorized packages
+     */
+    public function composerAuthentication(Request $request)
+    {
+        $registryToken = $request->input('registryToken');
+        if (!$registryToken) {
+            return response()->error('No registry token provided for authentication.', 401);
+        }
+
+        // Get registry user via token
+        $registryUser = RegistryUser::where('registry_token', $registryToken)->first();
+        if (!$registryUser) {
+            return response()->error('Invalid registry token provided for authentication.', 401);
+        }
+
+        // Fetch unauthorized extensions
+        $unauthorizedExtensions = RegistryExtension::where('payment_required', true)
+        ->whereDoesntHave('purchases', function ($query) use ($registryUser) {
+            $query->where('company_uuid', $registryUser->company_uuid);
+        })
+        ->whereHas('currentBundle')
+        ->with('currentBundle')
+        ->get();
+
+        // Map to unathorized to package names
+        $unauthorizedExtensionNames = $unauthorizedExtensions->map(function ($registryExtension) {
+            $composerJson = $registryExtension->currentBundle->meta['composer.json'] ?? [];
+
+            return $composerJson['name'] ?? null;
+        })->filter()->values();
+
+        // Done
+        return response()->json([
+            'status'               => 'ok',
+            'unauthorizedPackages' => $unauthorizedExtensionNames,
+        ]);
+    }
+
+    /**
      * Authenticates a registry user based on provided credentials.
      *
      * This method attempts to authenticate a user using an identity (which can be either an email or username)

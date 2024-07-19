@@ -3,7 +3,7 @@
 namespace Fleetbase\RegistryBridge\Http\Filter;
 
 use Fleetbase\Http\Filter\Filter;
-use Fleetbase\Support\Utils;
+use Fleetbase\RegistryBridge\Support\Utils;
 use Illuminate\Support\Str;
 
 class RegistryExtensionFilter extends Filter

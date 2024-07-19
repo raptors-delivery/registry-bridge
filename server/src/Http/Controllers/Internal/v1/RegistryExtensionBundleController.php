@@ -8,7 +8,7 @@ use Fleetbase\RegistryBridge\Http\Controllers\RegistryBridgeController;
 use Fleetbase\RegistryBridge\Http\Requests\CreateRegistryExtensionBundleRequest;
 use Fleetbase\RegistryBridge\Http\Requests\RegistryExtensionActionRequest;
 use Fleetbase\RegistryBridge\Models\RegistryExtensionBundle;
-use Fleetbase\Support\Utils;
+use Fleetbase\RegistryBridge\Support\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;

@@ -6,7 +6,19 @@
 </Layout::Section::Header>
 
 <Layout::Section::Body class="overflow-y-scroll h-full">
-    {{#unless this.hasStripeConnectAccount}}
+    {{#if this.hasStripeConnectAccount}}
+        <Table
+            @rows={{@model.data}}
+            @columns={{this.columns}}
+            @selectable={{false}}
+            @canSelectAll={{false}}
+            @onSetup={{fn (mut this.table)}}
+            @pagination={{true}}
+            @paginationMeta={{@model.meta}}
+            @page={{this.page}}
+            @onPageChange={{fn (mut this.page)}}
+        />
+    {{else}}
         <div class="container">
             <div class="max-w-3xl mx-auto mt-4">
                 <div class="content">
@@ -18,16 +30,5 @@
                 </div>
             </div>
         </div>
-    {{/unless}}
-    <Table
-        @rows={{@model.data}}
-        @columns={{this.columns}}
-        @selectable={{false}}
-        @canSelectAll={{false}}
-        @onSetup={{fn (mut this.table)}}
-        @pagination={{true}}
-        @paginationMeta={{@model.meta}}
-        @page={{this.page}}
-        @onPageChange={{fn (mut this.page)}}
-    />
+    {{/if}}
 </Layout::Section::Body>
