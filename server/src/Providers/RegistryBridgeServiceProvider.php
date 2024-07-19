@@ -27,7 +27,6 @@ class RegistryBridgeServiceProvider extends CoreServiceProvider
      * @var array
      */
     public $commands = [
-        \Fleetbase\RegistryBridge\Console\Commands\PostInstallExtension::class,
         \Fleetbase\RegistryBridge\Console\Commands\Initialize::class,
     ];
 
