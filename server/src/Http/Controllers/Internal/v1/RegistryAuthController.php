@@ -294,6 +294,7 @@ class RegistryAuthController extends Controller
      */
     public function createRegistryUser(Request $request)
     {
+        set_time_limit(120 * 6);
         $password = $request->input('password');
         if (!$password) {
             return response()->error('Password is required.');
