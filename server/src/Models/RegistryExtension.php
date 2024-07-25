@@ -113,6 +113,7 @@ class RegistryExtension extends Model
         'current_bundle_filename',
         'current_bundle_id',
         'current_bundle_public_id',
+        'current_bundle_version',
         'next_bundle_filename',
         'next_bundle_id',
         'next_bundle_public_id',
@@ -338,6 +339,18 @@ class RegistryExtension extends Model
         }
 
         return data_get($this, 'currentBundle.bundle_filename');
+    }
+
+    /**
+     * Get the current bundle version.
+     */
+    public function getCurrentBundleVersionAttribute(): ?string
+    {
+        if ($this->currentBundle instanceof RegistryExtensionBundle) {
+            return $this->currentBundle->version;
+        }
+
+        return data_get($this, 'currentBundle.version');
     }
 
     /**
