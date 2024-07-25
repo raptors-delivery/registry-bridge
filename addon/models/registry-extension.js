@@ -15,6 +15,7 @@ export default class RegistryExtensionModel extends Model {
     @attr('string') icon_uuid;
     @attr('string') public_id;
     @attr('string') current_bundle_public_id;
+    @attr('string') current_bundle_version;
     @attr('string') next_bundle_public_id;
     @attr('string') current_bundle_id;
     @attr('string') next_bundle_id;

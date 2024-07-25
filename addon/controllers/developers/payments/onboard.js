@@ -4,7 +4,7 @@ import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { task } from 'ember-concurrency';
 import { loadConnectAndInitialize } from '@stripe/connect-js';
-import config from '../config/environment';
+import config from '../../../config/environment';
 
 export default class DevelopersPaymentsOnboardController extends Controller {
     @service fetch;
