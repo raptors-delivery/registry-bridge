@@ -8,14 +8,14 @@
         />
     </InputGroup>
     {{#if @extension.payment_required}}
-        <InputGroup>
+        {{!-- <InputGroup>
             <Toggle
                 @isToggled={{@extension.subscription_required}}
                 @onToggle={{fn (mut @extension.subscription_required)}}
                 @label={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required"}}
                 @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-required-help-text"}}
             />
-        </InputGroup>
+        </InputGroup> --}}
         {{#if @extension.subscription_required}}
             <InputGroup
                 @name={{t "registry-bridge.developers.extensions.extension-form.extension-subscription-billing-period"}}

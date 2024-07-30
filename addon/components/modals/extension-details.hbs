@@ -31,7 +31,7 @@
             <h3 class="dark:text-white font-semibold mb-1">Overview</h3>
             <div class="space-y-1">
                 <p class="dark:text-gray-200 text-sm">{{this.extension.description}}</p>
-                <p class="dark:text-gray-200 text-sm">{{this.extension.promotional_text}}</p>
+                <p class="dark:text-gray-200 text-sm">{{html-safe this.extension.promotional_text}}</p>
             </div>
         </div>
         <div>

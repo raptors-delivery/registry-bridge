@@ -553,7 +553,11 @@ class RegistryExtension extends Model
             }
 
             // Update stripe product id
-            $this->update(['stripe_product_id' => $product->id]);
+            if ($this->exists) {
+                $this->update(['stripe_product_id' => $product->id]);
+            } else {
+                $this->setAttribute('stripe_product_id', $product->id);
+            }
 
             return $product;
         }
@@ -576,8 +580,8 @@ class RegistryExtension extends Model
             $this->getStripeProduct();
         }
 
-        $stripe = Utils::getStripeClient();
-        $price  = null;
+        $stripe  = Utils::getStripeClient();
+        $price   = null;
         if ($stripe) {
             $prices = $stripe->prices->all(['product' => $this->stripe_product_id, 'limit' => 1, 'active' => true]);
             $price  = is_array($prices->data) && count($prices->data) ? $prices->data[0] : null;
