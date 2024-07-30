@@ -106,11 +106,10 @@
                 @name={{t "registry-bridge.developers.extensions.extension-form.extension-promotional-text"}}
                 @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-promotional-text-help-text"}}
             >
-                <Textarea
+                <TipTapEditor
                     @value={{@extension.promotional_text}}
+                    @onChange={{fn (mut @extension.promotional_text)}}
                     placeholder={{t "registry-bridge.developers.extensions.extension-form.extension-promotional-text"}}
-                    class="form-input w-full"
-                    rows="3"
                 />
             </InputGroup>
             <InputGroup
