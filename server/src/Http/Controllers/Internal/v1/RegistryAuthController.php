@@ -40,21 +40,27 @@ class RegistryAuthController extends Controller
             return response()->error('Invalid registry token provided for authentication.', 401);
         }
 
-        // Fetch unauthorized extensions
-        $unauthorizedExtensions = RegistryExtension::where('payment_required', true)
-        ->whereDoesntHave('purchases', function ($query) use ($registryUser) {
-            $query->where('company_uuid', $registryUser->company_uuid);
-        })
-        ->whereHas('currentBundle')
-        ->with('currentBundle')
-        ->get();
+        // Init unauthorized extensions
+        $unauthorizedExtensionNames = collect();
 
-        // Map to unathorized to package names
-        $unauthorizedExtensionNames = $unauthorizedExtensions->map(function ($registryExtension) {
-            $composerJson = $registryExtension->currentBundle->meta['composer.json'] ?? [];
+        // Unless admin the registry user is only allowed access to their extensions
+        if ($registryUser->isNotAdmin()) {
+            // Fetch unauthorized extensions
+            $unauthorizedExtensions = RegistryExtension::where('payment_required', true)
+            ->whereDoesntHave('purchases', function ($query) use ($registryUser) {
+                $query->where('company_uuid', $registryUser->company_uuid);
+            })
+            ->whereHas('currentBundle')
+            ->with('currentBundle')
+            ->get();
 
-            return $composerJson['name'] ?? null;
-        })->filter()->values();
+            // Map to unathorized to package names
+            $unauthorizedExtensionNames = $unauthorizedExtensions->map(function ($registryExtension) {
+                $composerJson = $registryExtension->currentBundle->meta['composer.json'] ?? [];
+
+                return $composerJson['name'] ?? null;
+            })->filter()->values();
+        }
 
         // Done
         return response()->json([
