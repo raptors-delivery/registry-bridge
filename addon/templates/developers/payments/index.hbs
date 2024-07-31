@@ -1,8 +1,10 @@
 <Layout::Section::Header @title="Payments">
-    <div class="flex flex-row space-x-1">
-        <span class="text-sm text-black dark:text-white font-bold">Total Amount:</span>
-        <span class="text-sm text-black dark:text-white">{{format-currency @model.total_amount "USD"}}</span>
-    </div>
+    {{#if this.hasStripeConnectAccount}}
+        <div class="flex flex-row space-x-1">
+            <span class="text-sm text-black dark:text-white font-bold">Total Amount:</span>
+            <span class="text-sm text-black dark:text-white">{{format-currency @model.total_amount "USD"}}</span>
+        </div>
+    {{/if}}
 </Layout::Section::Header>
 
 <Layout::Section::Body class="overflow-y-scroll h-full">
