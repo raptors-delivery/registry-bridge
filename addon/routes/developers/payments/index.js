@@ -15,12 +15,7 @@ export default class DevelopersPaymentsIndexRoute extends Route {
         return this.fetch.get('payments/author-received', {}, { namespace: '~registry/v1' });
     }
 
-    async setupController(controller) {
-        try {
-            const { hasStripeConnectAccount } = await this.fetch.get('payments/has-stripe-connect-account', {}, { namespace: '~registry/v1' });
-            controller.hasStripeConnectAccount = hasStripeConnectAccount;
-        } catch (error) {
-            controller.hasStripeConnectAccount = false;
-        }
+    setupController(controller) {
+        controller.lookupStripeConnectAccount.perform();
     }
 }

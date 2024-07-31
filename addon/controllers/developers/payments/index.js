@@ -1,7 +1,10 @@
 import Controller from '@ember/controller';
 import { tracked } from '@glimmer/tracking';
+import { inject as service } from '@ember/service';
+import { task } from 'ember-concurrency';
 
 export default class DevelopersPaymentsIndexController extends Controller {
+    @service fetch;
     @tracked hasStripeConnectAccount = true;
     @tracked table;
     @tracked page = 1;
@@ -37,4 +40,13 @@ export default class DevelopersPaymentsIndexController extends Controller {
             width: '20%',
         },
     ];
+
+    @task *lookupStripeConnectAccount() {
+        try {
+            const { hasStripeConnectAccount } = yield this.fetch.get('payments/has-stripe-connect-account', {}, { namespace: '~registry/v1' });
+            this.hasStripeConnectAccount = hasStripeConnectAccount;
+        } catch (error) {
+            this.hasStripeConnectAccount = false;
+        }
+    }
 }
