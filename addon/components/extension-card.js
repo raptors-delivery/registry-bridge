@@ -40,9 +40,10 @@ export default class ExtensionCardComponent extends Component {
 
     @action onClick(options = {}) {
         const installChannel = `install.${this.currentUser.companyId}.${this.extension.id}`;
+        const isAuthor = this.extension.is_author === true;
         const isAlreadyPurchased = this.extension.is_purchased === true;
         const isAlreadyInstalled = this.extension.is_installed === true;
-        const isPaymentRequired = this.extension.payment_required === true && isAlreadyPurchased === false;
+        const isPaymentRequired = !isAuthor && this.extension.payment_required === true && isAlreadyPurchased === false;
 
         if (typeof this.args.onClick === 'function') {
             this.args.onClick(this.extension);

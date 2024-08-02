@@ -57,6 +57,7 @@ class RegistryExtension extends Model
         'stripe_product_id',
         'name',
         'subtitle',
+        'self_managed',
         'payment_required',
         'price',
         'sale_price',
@@ -90,6 +91,7 @@ class RegistryExtension extends Model
      * The attributes that should be cast to native types.
      */
     protected $casts = [
+        'self_managed'          => 'boolean',
         'payment_required'      => 'boolean',
         'on_sale'               => 'boolean',
         'subscription_required' => 'boolean',
@@ -121,6 +123,7 @@ class RegistryExtension extends Model
         'publisher_name',
         'is_purchased',
         'is_installed',
+        'is_author',
     ];
 
     /**
@@ -411,6 +414,14 @@ class RegistryExtension extends Model
         }
 
         return data_get($this, 'company.name');
+    }
+
+    /**
+     * Determines if the current company session is the author of the extension.
+     */
+    public function getIsAuthorAttribute(): bool
+    {
+        return $this->company_uuid === session('company');
     }
 
     /**

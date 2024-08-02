@@ -101,7 +101,13 @@
                 {{/if}}
             </div>
         </ContentPanel>
-        <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-listing-details"}} @open={{true}} @pad={{true}} @panelBodyClass="bg-white dark:bg-gray-800">
+        <ContentPanel
+            @title={{t "registry-bridge.developers.extensions.extension-form.extension-listing-details"}}
+            @open={{true}}
+            @pad={{true}}
+            @panelBodyClass="bg-white dark:bg-gray-800"
+            @actionButtons={{this.listingDetailsPanelActions}}
+        >
             <InputGroup
                 @name={{t "registry-bridge.developers.extensions.extension-form.extension-promotional-text"}}
                 @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-promotional-text-help-text"}}
