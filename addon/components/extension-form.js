@@ -19,8 +19,8 @@ export default class ExtensionFormComponent extends Component {
             type: 'link',
             size: 'xs',
             text: 'Preview Listing',
-            onClick: this.previewListing
-        }
+            onClick: this.previewListing,
+        },
     ];
     acceptedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
     acceptedBundleTypes = [
@@ -142,10 +142,9 @@ export default class ExtensionFormComponent extends Component {
             modalHeaderClass: 'flb--extension-modal-header',
             acceptButtonText: isPaymentRequired ? `Purchase for ${formatCurrency(extension.price, extension.currency)}` : isAlreadyInstalled ? 'Installed' : 'Install',
             acceptButtonIcon: isPaymentRequired ? 'credit-card' : isAlreadyInstalled ? 'check' : 'download',
-            acceptButtonDisabled: isAlreadyInstalled,
+            acceptButtonDisabled: true,
             acceptButtonScheme: isPaymentRequired ? 'success' : 'primary',
             declineButtonText: 'Done',
-            acceptButtonDisabled: true,
             extension,
             ...options,
         });

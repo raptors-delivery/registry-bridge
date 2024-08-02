@@ -69,7 +69,6 @@
 
             <InputGroup
                 @name={{t "registry-bridge.developers.extensions.extension-form.extension-tags"}}
-                @wrapperClass="mb-0i"
                 @helpText={{t "registry-bridge.developers.extensions.extension-form.extension-tags-help-text"}}
             >
                 <TagInput
@@ -84,6 +83,19 @@
                 >
                     {{tag}}
                 </TagInput>
+            </InputGroup>
+
+            <InputGroup @wrapperClass="mb-0i">
+                <Toggle
+                    @isToggled={{@extension.self_managed}}
+                    @onToggle={{fn (mut @extension.self_managed)}}
+                    @helpText={{t "registry-bridge.developers.extensions.extension-form.self-managed-help-text"}}
+                >
+                    <span class="dark:text-gray-100 text-sm mx-2">{{t "registry-bridge.developers.extensions.extension-form.self-managed"}}</span>
+                </Toggle>
+                <p class="mt-2 text-xs bg-blue-800 border border-blue-600 px-2 py-2 rounded-md text-blue-100">
+                    {{t "registry-bridge.developers.extensions.extension-form.self-managed-help-text"}}
+                </p>
             </InputGroup>
         </ContentPanel>
         <ContentPanel @title={{t "registry-bridge.developers.extensions.extension-form.extension-bundle"}} @open={{true}} @pad={{false}} @panelBodyClass="bg-white dark:bg-gray-800">
