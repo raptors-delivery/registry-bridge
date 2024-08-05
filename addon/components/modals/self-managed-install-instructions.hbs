@@ -1,0 +1,29 @@
+<Modal::Default @modalIsOpened={{@modalIsOpened}} @options={{@options}} @confirm={{@onConfirm}} @decline={{@onDecline}}>
+    <div class="modal-body-container">
+        <ol class="self-managed-install-instructions">
+            <li>
+                <div class="flex">
+                    <LinkTo @route="console.extensions.developers.credentials" class="text-blue-500 hover:opacity-50">Generate a Fleetbase registry credentials token.</LinkTo>
+                </div>
+            </li>
+            <li>
+                <div class="flex">Install fleetbase-cli
+                    <ClickToCopy @value={{concat "npm i -g @fleetbase/cli"}}><code>npm i -g @fleetbase/cli</code></ClickToCopy>
+                </div>
+            </li>
+            <li>
+                <div class="flex">Run
+                    <ClickToCopy @value={{concat "flb set-auth"}}><code>flb set-auth {YOUR_TOKEN}</code></ClickToCopy>
+                </div>
+            </li>
+            <li>
+                <div class="flex">
+                    Run install
+                    <ClickToCopy @value={{concat "flb install fleetbase/" @options.extension.slug}}><code>flb install fleetbase/{{@options.extension.slug}}</code></ClickToCopy>
+                    or
+                    <ClickToCopy @value={{concat "flb install " @options.extension.public_id}}><code>flb install {{@options.extension.public_id}}</code></ClickToCopy>
+                </div>
+            </li>
+        </ol>
+    </div>
+</Modal::Default>

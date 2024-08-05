@@ -68,6 +68,9 @@
                                 <Badge @status="info" @hideStatusDot={{true}} @helpText={{t "registry-bridge.component.extension-details-modal.self-managed-help-text"}}>{{t
                                         "registry-bridge.component.extension-details-modal.self-managed"
                                     }}</Badge>
+                                {{#if @options.viewSelfManagesInstallInstructions}}
+                                    <a href="#" class="text-xs text-blue-400 hover:opacity-50" {{on "click" @options.viewSelfManagesInstallInstructions}}><FaIcon @icon="circle-info" class="mr-1" />How to install</a>
+                                {{/if}}
                             </div>
                         {{/if}}
                     </div>

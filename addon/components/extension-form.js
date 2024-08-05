@@ -145,7 +145,29 @@ export default class ExtensionFormComponent extends Component {
             acceptButtonDisabled: true,
             acceptButtonScheme: isPaymentRequired ? 'success' : 'primary',
             declineButtonText: 'Done',
+            viewSelfManagesInstallInstructions: () => {
+                const done = async () => {
+                    await this.modalsManager.done();
+                    this.previewListing();
+                };
+
+                this.selfManagedInstallInstructions({
+                    extension,
+                    confirm: done,
+                    decline: done,
+                });
+            },
             extension,
+            ...options,
+        });
+    }
+
+    async selfManagedInstallInstructions(options = {}) {
+        await this.modalsManager.done();
+        this.modalsManager.show('modals/self-managed-install-instructions', {
+            title: 'Install a Self Managed Extension',
+            hideDeclineButton: true,
+            acceptButtonText: 'Done',
             ...options,
         });
     }

@@ -15,6 +15,7 @@ use Fleetbase\Traits\HasMetaAttributes;
 use Fleetbase\Traits\HasPublicId;
 use Fleetbase\Traits\HasUuid;
 use Fleetbase\Traits\Searchable;
+use Illuminate\Support\Str;
 use Spatie\Sluggable\HasSlug;
 use Spatie\Sluggable\SlugOptions;
 
@@ -442,6 +443,39 @@ class RegistryExtension extends Model
         return static::whereHas('currentBundle', function ($query) use ($packageName) {
             $query->where('meta->package.json->name', $packageName)->orWhere('meta->composer.json->name', $packageName);
         })->first();
+    }
+
+    /**
+     * Lookup a registry extension based on the given package name.
+     *
+     * This method attempts to find a `RegistryExtension` that matches the provided package name. It checks multiple fields including
+     * `uuid`, `public_id`, and `slug`. If the package name starts with 'fleetbase/', it also attempts to match the slug extracted from the package name.
+     *
+     * Additionally, the method checks for the existence of a related `currentBundle` where the `package.json` or `composer.json` metadata
+     * matches the provided package name.
+     *
+     * @param string $packageName the name, UUID, public ID, or slug of the package to lookup
+     *
+     * @return RegistryExtension|null returns the found `RegistryExtension` instance or `null` if no match is found
+     */
+    public static function lookup(string $packageName): ?RegistryExtension
+    {
+        return static::where('status', 'published')->where(function ($query) use ($packageName) {
+            $query->where('uuid', $packageName)
+                  ->orWhere('public_id', $packageName)
+                  ->orWhere('slug', $packageName);
+
+            // Check for fleetbase/ prefix and match slug
+            if (Str::startsWith($packageName, 'fleetbase/')) {
+                $packageSlug = explode('/', $packageName)[1] ?? null;
+                if ($packageSlug) {
+                    $query->orWhere('slug', $packageSlug);
+                }
+            }
+        })->orWhereHas('currentBundle', function ($query) use ($packageName) {
+            $query->where('meta->package.json->name', $packageName)
+                  ->orWhere('meta->composer.json->name', $packageName);
+        })->with(['currentBundle'])->first();
     }
 
     /**

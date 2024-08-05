@@ -6,6 +6,7 @@ use Fleetbase\Http\Controllers\Controller;
 use Fleetbase\Http\Resources\Category as CategoryResource;
 use Fleetbase\Models\Category;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
+use Illuminate\Http\Request;
 
 class RegistryController extends Controller
 {
@@ -50,5 +51,50 @@ class RegistryController extends Controller
         });
 
         return response()->json($installedExtensions);
+    }
+
+    /**
+     * Lookup and retrieve package information based on the provided package name.
+     *
+     * This method handles a request to lookup a package by its name. It utilizes the `RegistryExtension::lookup` method to find the
+     * corresponding registry extension. If no extension is found or if the extension does not have valid package or composer data,
+     * an error response is returned.
+     *
+     * If a valid extension and its associated bundle are found, the function extracts the package and composer names from the
+     * `package.json` and `composer.json` metadata. These names are then returned in a JSON response.
+     *
+     * @param Request $request the incoming HTTP request containing the 'package' input parameter
+     *
+     * @return \Illuminate\Http\JsonResponse a JSON response containing the package and composer names if found, or an error message otherwise
+     */
+    public function lookupPackage(Request $request)
+    {
+        $packageName       = $request->input('package');
+        $registryExtension = RegistryExtension::lookup($packageName);
+        if (!$registryExtension) {
+            return response()->error('No extension found by this name for install');
+        }
+
+        if (!$registryExtension->currentBundle) {
+            return response()->error('No valid package data found for this extension install');
+        }
+
+        $packageJson = $registryExtension->currentBundle->meta['package.json'];
+        if (!$packageJson) {
+            return response()->error('No valid package data found for this extension install');
+        }
+
+        $composerJson = $registryExtension->currentBundle->meta['composer.json'];
+        if (!$composerJson) {
+            return response()->error('No valid package data found for this extension install');
+        }
+
+        $packageJsonName  = data_get($packageJson, 'name');
+        $composerJsonName = data_get($composerJson, 'name');
+
+        return response()->json([
+            'npm'      => $packageJsonName,
+            'composer' => $composerJsonName,
+        ]);
     }
 }

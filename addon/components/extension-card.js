@@ -64,6 +64,18 @@ export default class ExtensionCardComponent extends Component {
             stepDescription: 'Awaiting install to begin...',
             progress: 0,
             extension: this.extension,
+            viewSelfManagesInstallInstructions: () => {
+                const done = async () => {
+                    await this.modalsManager.done();
+                    this.onClick();
+                };
+
+                this.selfManagedInstallInstructions({
+                    extension: this.extension,
+                    confirm: done,
+                    decline: done,
+                });
+            },
             confirm: async (modal) => {
                 modal.startLoading();
 
@@ -118,6 +130,16 @@ export default class ExtensionCardComponent extends Component {
                 modal.done();
                 removeParamFromCurrentUrl('extension_id');
             },
+            ...options,
+        });
+    }
+
+    async selfManagedInstallInstructions(options = {}) {
+        await this.modalsManager.done();
+        this.modalsManager.show('modals/self-managed-install-instructions', {
+            title: 'Install a Self Managed Extension',
+            hideDeclineButton: true,
+            acceptButtonText: 'Done',
             ...options,
         });
     }
