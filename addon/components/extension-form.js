@@ -3,6 +3,7 @@ import { tracked } from '@glimmer/tracking';
 import { inject as service } from '@ember/service';
 import { action } from '@ember/object';
 import { task } from 'ember-concurrency';
+import { later } from '@ember/runloop';
 import formatCurrency from '@fleetbase/ember-ui/utils/format-currency';
 
 export default class ExtensionFormComponent extends Component {
@@ -135,6 +136,16 @@ export default class ExtensionFormComponent extends Component {
         const isAlreadyPurchased = extension.is_purchased === true;
         const isAlreadyInstalled = extension.is_installed === true;
         const isPaymentRequired = extension.payment_required === true && isAlreadyPurchased === false;
+        const goBack = async (modal) => {
+            await modal.done();
+            later(
+                this,
+                () => {
+                    this.previewListing();
+                },
+                100
+            );
+        };
 
         this.modalsManager.show('modals/extension-details', {
             titleComponent: 'extension-modal-title',
@@ -146,15 +157,10 @@ export default class ExtensionFormComponent extends Component {
             acceptButtonScheme: isPaymentRequired ? 'success' : 'primary',
             declineButtonText: 'Done',
             viewSelfManagesInstallInstructions: () => {
-                const done = async () => {
-                    await this.modalsManager.done();
-                    this.previewListing();
-                };
-
                 this.selfManagedInstallInstructions({
                     extension,
-                    confirm: done,
-                    decline: done,
+                    confirm: goBack,
+                    decline: goBack,
                 });
             },
             extension,
