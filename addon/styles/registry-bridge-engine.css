@@ -140,3 +140,34 @@ body[data-theme='dark'] .extension-card-container > .extension-card-body-contain
     margin-left: 2rem;
     margin-bottom: 2rem;
 }
+
+.self-managed-install-instructions {
+    list-style: decimal;
+    color: #000;
+    padding-left: 30px;
+    font-size: 0.85rem;
+    line-height: 1rem;
+}
+
+.self-managed-install-instructions > li {
+    padding-bottom: 1.5rem;
+}
+
+body[data-theme='dark'] .self-managed-install-instructions {
+    list-style: decimal;
+    color: #fff;
+    padding-left: 30px;
+}
+
+.self-managed-install-instructions code {
+    display: flex;
+    font-family: monospace;
+    padding: 0.25rem 0.75rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+    background-color: #1f2937;
+    border: 1px #374151 solid;
+    color: #86efac;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+}

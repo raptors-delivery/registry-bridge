@@ -9,6 +9,16 @@ registry-bridge:
     about: About
     about-extension: About {extensionName}
   component:
+    extension-details-modal:
+      extension: Extension
+      author: Author
+      overview: Overview
+      details: Details
+      version: Version
+      updated: Updated
+      website: Website
+      self-managed: Self Managed
+      self-managed-help-text: A self-managed extension is designed for users who host Fleetbase on their own servers, outside of the cloud/SaaS environment. These extensions require manual installation and configuration. If you are using Fleetbase as a self-hosted instance, you can use these extensions to add additional features. However, they are not available for cloud/SaaS users.
     extension-pending-publish-viewer:
       content-panel-title: Extensions Pending Publish
       focused-extension-title: >
@@ -117,3 +127,5 @@ registry-bridge:
         extension-id-help-text: The unique identifier for this extension.
         bundles: Bundles
         upload-new-bundle: Upload new Bundle
+        self-managed: Self Managed
+        self-managed-help-text: Enable this option if your module is intended for self-hosted instances only. By selecting this, the module will not be available for installation on the cloud/SaaS version of Fleetbase and must be manually installed by the user on their own server.

@@ -688,7 +688,7 @@ class RegistryExtensionBundle extends Model
                 ]);
 
                 // minimal latency
-                usleep(500 * rand(2, 4));
+                usleep(50 * rand(1, 3));
             }
         }
     }
@@ -708,7 +708,7 @@ class RegistryExtensionBundle extends Model
                 ]);
 
                 // minimal latency
-                usleep(500 * rand(2, 4));
+                usleep(50 * rand(1, 3));
             }
         }
     }

@@ -40,9 +40,21 @@ export default class ExtensionCardComponent extends Component {
 
     @action onClick(options = {}) {
         const installChannel = `install.${this.currentUser.companyId}.${this.extension.id}`;
+        const isAuthor = this.extension.is_author === true;
+        const isSelfManaged = this.extension.self_managed === true;
         const isAlreadyPurchased = this.extension.is_purchased === true;
         const isAlreadyInstalled = this.extension.is_installed === true;
-        const isPaymentRequired = this.extension.payment_required === true && isAlreadyPurchased === false;
+        const isPaymentRequired = !isAuthor && this.extension.payment_required === true && isAlreadyPurchased === false;
+        const goBack = async (modal) => {
+            await modal.done();
+            later(
+                this,
+                () => {
+                    this.onClick();
+                },
+                100
+            );
+        };
 
         if (typeof this.args.onClick === 'function') {
             this.args.onClick(this.extension);
@@ -63,12 +75,35 @@ export default class ExtensionCardComponent extends Component {
             stepDescription: 'Awaiting install to begin...',
             progress: 0,
             extension: this.extension,
+            viewSelfManagesInstallInstructions: () => {
+                this.selfManagedInstallInstructions({
+                    extension: this.extension,
+                    confirm: goBack,
+                    decline: goBack,
+                });
+            },
             confirm: async (modal) => {
                 modal.startLoading();
 
                 // Handle purchase flow
                 if (isPaymentRequired) {
                     return this.startCheckoutSession();
+                }
+
+                // If self managed just prompt instructions
+                if (isSelfManaged) {
+                    await modal.done();
+                    return later(
+                        this,
+                        () => {
+                            return this.selfManagedInstallInstructions({
+                                extension: this.extension,
+                                confirm: goBack,
+                                decline: goBack,
+                            });
+                        },
+                        100
+                    );
                 }
 
                 // Listen for install progress
@@ -117,6 +152,16 @@ export default class ExtensionCardComponent extends Component {
                 modal.done();
                 removeParamFromCurrentUrl('extension_id');
             },
+            ...options,
+        });
+    }
+
+    async selfManagedInstallInstructions(options = {}) {
+        await this.modalsManager.done();
+        this.modalsManager.show('modals/self-managed-install-instructions', {
+            title: 'Install a Self Managed Extension',
+            hideDeclineButton: true,
+            acceptButtonText: 'Done',
             ...options,
         });
     }
