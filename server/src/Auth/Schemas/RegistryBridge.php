@@ -200,7 +200,7 @@ class RegistryBridge
         ],
         [
             'name'           => 'Extension Admin',
-            'description'    => 'Role for full control of extensions..',
+            'description'    => 'Role for full control of extensions.',
             'permissions'    => [
                 '* extension',
                 '* extension-bundle',
