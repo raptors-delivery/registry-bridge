@@ -29,7 +29,7 @@
                     </InputGroup>
                 </ContentPanel>
                 <div class="mt-4 flex items-center space-x-4">
-                    <Button @size="lg" @type="primary" @text="Continue" @icon="check" @onClick={{perform this.save}} @isLoading={{not this.save.isIdle}} />
+                    <Button @size="lg" @type="primary" @text="Continue" @icon="check" @onClick={{perform this.save}} @isLoading={{not this.save.isIdle}} @permission="registry-bridge create registry-bundle" />
                     <Button @size="lg" @type="default" @text="Cancel" @icon="times" @onClick={{this.cancel}} />
                 </div>
             </div>

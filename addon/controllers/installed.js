@@ -9,6 +9,7 @@ export default class InstalledController extends Controller {
     @service notifications;
     @service socket;
     @service hostRouter;
+    @service abilities;
 
     @action about(extension) {
         this.modalsManager.show('modals/extension-details', {
@@ -31,6 +32,7 @@ export default class InstalledController extends Controller {
             acceptButtonText: 'Uninstall',
             acceptButtonIcon: 'trash',
             acceptButtonScheme: 'danger',
+            acceptButtonDisabled: this.abilities.cannot('registry-bridge uninstall extension'),
             process: null,
             step: null,
             stepDescription: 'Awaiting uninstall to begin...',

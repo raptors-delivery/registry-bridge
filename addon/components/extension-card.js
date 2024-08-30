@@ -26,6 +26,7 @@ export default class ExtensionCardComponent extends Component {
     @service fetch;
     @service stripe;
     @service urlSearchParams;
+    @service abilities;
     @tracked extension;
 
     constructor(owner, { extension }) {
@@ -45,6 +46,11 @@ export default class ExtensionCardComponent extends Component {
         const isAlreadyPurchased = this.extension.is_purchased === true;
         const isAlreadyInstalled = this.extension.is_installed === true;
         const isPaymentRequired = !isAuthor && this.extension.payment_required === true && isAlreadyPurchased === false;
+        const userCannotPurchase = isPaymentRequired && this.abilities.cannot('registry-bridge purchase extension');
+        let acceptButtonText = isPaymentRequired ? `Purchase for ${formatCurrency(this.extension.price, this.extension.currency)}` : isAlreadyInstalled ? 'Installed' : 'Install';
+        if (this.abilities.cannot('registry-bridge install extension')) {
+            acceptButtonText = 'Unauthorized to Install';
+        }
         const goBack = async (modal) => {
             await modal.done();
             later(
@@ -65,9 +71,9 @@ export default class ExtensionCardComponent extends Component {
             titleComponent: 'extension-modal-title',
             modalClass: 'flb--extension-modal modal-lg',
             modalHeaderClass: 'flb--extension-modal-header',
-            acceptButtonText: isPaymentRequired ? `Purchase for ${formatCurrency(this.extension.price, this.extension.currency)}` : isAlreadyInstalled ? 'Installed' : 'Install',
+            acceptButtonText,
             acceptButtonIcon: isPaymentRequired ? 'credit-card' : isAlreadyInstalled ? 'check' : 'download',
-            acceptButtonDisabled: isAlreadyInstalled,
+            acceptButtonDisabled: this.abilities.cannot('registry-bridge install extension') || isAlreadyInstalled || userCannotPurchase,
             acceptButtonScheme: isPaymentRequired ? 'success' : 'primary',
             declineButtonText: 'Done',
             process: null,

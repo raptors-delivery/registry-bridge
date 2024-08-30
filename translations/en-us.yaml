@@ -12,6 +12,7 @@ registry-bridge:
     extension-details-modal:
       extension: Extension
       author: Author
+      description: Description
       overview: Overview
       details: Details
       version: Version

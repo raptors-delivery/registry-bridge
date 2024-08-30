@@ -9,6 +9,8 @@
         @size="xs"
         @iconPrefix="fas"
         @triggerClass="hidden md:flex"
+        @permission="registry-bridge list extension"
+        @disabled={{not @model}}
         as |dd|
     >
         <div class="next-dd-menu mt-1 mx-0" aria-labelledby="user-menu">

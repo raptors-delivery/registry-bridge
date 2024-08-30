@@ -3,10 +3,17 @@ import { inject as service } from '@ember/service';
 
 export default class DevelopersPaymentsOnboardRoute extends Route {
     @service fetch;
-    @service hostRouter;
     @service notifications;
+    @service hostRouter;
+    @service abilities;
+    @service intl;
 
     async beforeModel() {
+        if (this.abilities.cannot('registry-bridge onboard extension-payment')) {
+            this.notifications.warning(this.intl.t('common.unauthorized-access'));
+            return this.hostRouter.transitionTo('console');
+        }
+
         try {
             const { hasStripeConnectAccount } = await this.fetch.get('payments/has-stripe-connect-account', {}, { namespace: '~registry/v1' });
             if (hasStripeConnectAccount) {
