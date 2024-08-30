@@ -27,11 +27,14 @@
                 </EmberWormhole>
             {{/if}}
         {{/if}}
-        <div>
-            <h3 class="dark:text-white font-semibold mb-1">{{t "registry-bridge.component.extension-details-modal.overview"}}</h3>
-            <div class="space-y-1">
+        <div class="space-y-3">
+            <div>
+                <h3 class="dark:text-white font-semibold mb-1">{{t "registry-bridge.component.extension-details-modal.description"}}</h3>
                 <p class="dark:text-gray-200 text-sm">{{this.extension.description}}</p>
-                <p class="dark:text-gray-200 text-sm">{{html-safe this.extension.promotional_text}}</p>
+            </div>
+            <div>
+                <h3 class="dark:text-white font-semibold mb-1">{{t "registry-bridge.component.extension-details-modal.overview"}}</h3>
+                <div class="extension-details-promo-content dark:text-gray-200 text-sm">{{html-safe this.extension.promotional_text}}</div>
             </div>
         </div>
         <div>

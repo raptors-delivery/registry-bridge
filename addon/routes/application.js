@@ -3,6 +3,17 @@ import { inject as service } from '@ember/service';
 
 export default class ApplicationRoute extends Route {
     @service fetch;
+    @service notifications;
+    @service hostRouter;
+    @service abilities;
+    @service intl;
+
+    beforeModel() {
+        if (this.abilities.cannot('registry-bridge see extension')) {
+            this.notifications.warning(this.intl.t('common.unauthorized-access'));
+            return this.hostRouter.transitionTo('console');
+        }
+    }
 
     async setupController(controller) {
         super.setupController(...arguments);

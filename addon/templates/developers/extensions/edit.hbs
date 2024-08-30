@@ -3,7 +3,7 @@
         <Badge @status={{@model.status}} />
     </div>
     <Button @type="default" @size="sm" @icon="arrow-left" @text={{t "common.back"}} @onClick={{transition-to "developers.extensions"}} @wrapperClass="mr-2" />
-    <Button @type="primary" @size="sm" @icon="save" @text={{t "common.save"}} @onClick={{perform this.save}} @isLoading={{not this.save.isIdle}} @wrapperClass="mr-2" />
+    <Button @type="primary" @size="sm" @icon="save" @text={{t "common.save"}} @onClick={{perform this.save}} @isLoading={{not this.save.isIdle}} @wrapperClass="mr-2" @permission="registry-bridge update registry-bundle" />
     <Button
         @type="magic"
         @size="sm"
@@ -13,6 +13,7 @@
         @onClick={{this.submitForReview}}
         @disabled={{not this.isReady}}
         @isLoading={{not this.startReview.isIdle}}
+        @permission="registry-bridge submit registry-bundle"
     />
 </Layout::Section::Header>
 

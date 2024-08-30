@@ -32,7 +32,7 @@
                         <div class="flex flex-col items-center justify-center">
                             <h1 class="text-lg font-semibold mb-1">Your account is not setup to accept payments yet.</h1>
                             <p class="text-sm mb-2">To accept payments for extensions, you must complete the onboard process via Stripe.</p>
-                            <Button @type="primary" @size="lg" @text="Start payments onboard" @onClick={{transition-to "developers.payments.onboard"}} />
+                            <Button @type="primary" @size="lg" @text="Start payments onboard" @onClick={{transition-to "developers.payments.onboard"}} @permission="registry-bridge onboard extension-payment" />
                         </div>
                     </div>
                 </div>

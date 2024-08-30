@@ -171,3 +171,109 @@ body[data-theme='dark'] .self-managed-install-instructions {
     font-size: 0.75rem;
     line-height: 1rem;
 }
+
+.extension-details-promo-content {
+    padding: 0.5rem;
+    background-color: #f9fafb;
+    color: #000;
+}
+
+body[data-theme='dark'] .extension-details-promo-content {
+    padding: 0.5rem;
+    background-color: #111827;
+    color: #f9fafb;
+}
+
+.extension-details-promo-content hr {
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+body[data-theme='dark'] .extension-details-promo-content hr {
+    border-top: 1px solid #374151;
+}
+
+.extension-details-promo-content ol,
+.extension-details-promo-content ul {
+    padding-left: 25px;
+}
+
+.extension-details-promo-content ol {
+    list-style: decimal;
+}
+
+.extension-details-promo-content ul {
+    list-style: disc;
+}
+
+.extension-details-promo-content blockquote {
+    border-left: 3px #e2e8f0 solid;
+    padding-left: 0.5rem;
+    margin-left: 0.25rem;
+    font-style: italic;
+}
+
+body[data-theme='dark'] .extension-details-promo-content blockquote {
+    border-left: 3px #4b5563 solid;
+}
+
+.extension-details-promo-content pre {
+    white-space: pre;
+    font-family: monospace;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    background-color: #f3f4f6;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+}
+
+body[data-theme='dark'] .extension-details-promo-content pre {
+    background-color: #1f2937;
+}
+
+.extension-details-promo-content pre > code {
+    font-family: monospace;
+}
+
+.extension-details-promo-content table {
+    border-collapse: collapse;
+    margin: 0;
+    overflow: hidden;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.extension-details-promo-content table td,
+.extension-details-promo-content table th {
+    border: 1px solid #d1d5db;
+    box-sizing: border-box;
+    min-width: 1em;
+    padding: 6px 8px;
+    position: relative;
+    vertical-align: top;
+}
+
+body[data-theme='dark'] .extension-details-promo-content table td,
+body[data-theme='dark'] .extension-details-promo-content table th {
+    border: 1px solid #374151;
+}
+
+.extension-details-promo-content table td > *,
+.extension-details-promo-content table th > * {
+    margin-bottom: 0;
+}
+
+.extension-details-promo-content table th {
+    background-color: #e5e7eb;
+    font-weight: bold;
+    text-align: left;
+}
+
+body[data-theme='dark'] .extension-details-promo-content table th {
+    background-color: #1f2937;
+}
+
+.extension-details-promo-content .tableWrapper {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+}
