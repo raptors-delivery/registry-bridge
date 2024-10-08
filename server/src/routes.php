@@ -14,8 +14,6 @@ use Illuminate\Support\Facades\Route;
 */
 // Lookup package endpoint
 Route::get(config('internals.api.routing.prefix', '~registry') . '/v1/lookup', 'Fleetbase\RegistryBridge\Http\Controllers\Internal\v1\RegistryController@lookupPackage');
-Route::get(config('internals.api.routing.prefix', '~registry') . '/v1/engines', 'Fleetbase\RegistryBridge\Http\Controllers\Internal\v1\RegistryController@getInstalledEngines');
-Route::get(config('internals.api.routing.prefix', '~registry') . '/v1/engine-install-status', 'Fleetbase\RegistryBridge\Http\Controllers\Internal\v1\RegistryController@getEngineInstallStatus');
 Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware(['fleetbase.registry'])->namespace('Fleetbase\RegistryBridge\Http\Controllers')->group(
     function ($router) {
         /*
@@ -38,6 +36,8 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
 
             $router->group(['middleware' => ['fleetbase.protected', 'throttle:60,1']], function ($router) {
                 $router->get('categories', 'RegistryController@categories');
+                $router->get('engines', 'RegistryController@getInstalledEngines');
+                $router->get('engine-install-status', 'RegistryController@getEngineInstallStatus');
 
                 $router->group(['prefix' => 'installer'], function ($router) {
                     $router->post('install', 'ExtensionInstallerController@install');
