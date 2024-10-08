@@ -44,7 +44,7 @@ class RegistryController extends Controller
      */
     public function getInstalledEngines(Request $request)
     {
-        if ($request->user() && $request->session()->has('company')) {
+        if ($request->session()->has('company')) {
             $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
                 $query->where('company_uuid', session('company'));
             })->get()->map(function ($extension) {
@@ -72,7 +72,7 @@ class RegistryController extends Controller
     {
         $engine = $request->input('engine');
 
-        if ($request->user() && $request->session()->has('company') && $engine) {
+        if ($request->session()->has('company') && $engine) {
             $installed = RegistryExtension::disableCache()
             ->whereHas(
                 'currentBundle',
