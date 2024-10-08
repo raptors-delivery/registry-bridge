@@ -10,15 +10,8 @@ module.exports = function (environment) {
         modulePrefix: name,
         environment,
         mountedEngineRoutePrefix: getMountedEngineRoutePrefix(),
-
         stripe: {
             publishableKey: getenv('STRIPE_KEY'),
-        },
-
-        'ember-leaflet': {
-            excludeCSS: true,
-            excludeJS: true,
-            excludeImages: true,
         },
     };
 
