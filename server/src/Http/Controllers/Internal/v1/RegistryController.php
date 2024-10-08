@@ -42,15 +42,55 @@ class RegistryController extends Controller
      * @return \Illuminate\Http\JsonResponse
      *                                       A JSON response containing a list of installed engines with their metadata
      */
-    public function getInstalledEngines()
+    public function getInstalledEngines(Request $request)
     {
-        $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
-            $query->where('company_uuid', session('company'));
-        })->get()->map(function ($extension) {
-            return $extension->currentBundle->meta['package.json'] ?? [];
-        });
+        if ($request->user() && $request->session()->has('company')) {
+            $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
+                $query->where('company_uuid', session('company'));
+            })->get()->map(function ($extension) {
+                return $extension->currentBundle->meta['package.json'] ?? [];
+            });
 
-        return response()->json($installedExtensions);
+            return response()->json($installedExtensions);
+        }
+
+        return [];
+    }
+
+    /**
+     * Determines if a specified engine is installed for the authenticated user's company.
+     *
+     * Retrieves the 'engine' input from the request and checks if the user is authenticated,
+     * the session has a 'company', and the 'engine' parameter is provided. It then queries
+     * the `RegistryExtension` model to determine if the engine is installed for the company.
+     *
+     * @param Request $request the incoming HTTP request containing the 'engine' parameter
+     *
+     * @return array An associative array with the installation status, e.g., ['installed' => true].
+     */
+    public function getEngineInstallStatus(Request $request)
+    {
+        $engine = $request->input('engine');
+
+        if ($request->user() && $request->session()->has('company') && $engine) {
+            $installed = RegistryExtension::disableCache()
+            ->whereHas(
+                'currentBundle',
+                function ($query) use ($engine) {
+                    $query->where('meta->package.json->name', $engine);
+                }
+            )
+            ->whereHas(
+                'installs',
+                function ($query) {
+                    $query->where('company_uuid', session('company'));
+                }
+            )->exists();
+
+            return ['installed' => $installed];
+        }
+
+        return ['installed' => false];
     }
 
     /**
