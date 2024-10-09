@@ -1,6 +1,6 @@
 {
     "name": "@fleetbase/registry-bridge-engine",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "description": "Internal Bridge between Fleetbase API and Extensions Registry",
     "fleetbase": {
         "route": "extensions"
