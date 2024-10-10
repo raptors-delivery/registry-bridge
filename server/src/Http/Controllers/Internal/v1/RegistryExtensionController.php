@@ -170,6 +170,32 @@ class RegistryExtensionController extends RegistryBridgeController
     }
 
     /**
+     * Mannually publishes a specific extension by its ID.
+     *
+     * This function locates a `RegistryExtension` using the provided ID and sets its status to 'published'.
+     * If the extension is successfully found and updated, it returns the extension resource. If the extension
+     * cannot be found, it returns an error response indicating the inability to locate the extension.
+     *
+     * @param RegistryExtensionActionRequest $request the validated request object
+     *
+     * @return \Illuminate\Http\Response|array returns an array containing the extension resource if successful,
+     *                                         or an error response if the extension cannot be found
+     */
+    public function manualPublish(RegistryExtensionActionRequest $request)
+    {
+        $id        = $request->input('id');
+        $extension = RegistryExtension::find($id);
+        if ($extension) {
+            $extension->update(['status' => 'published', 'current_bundle_uuid' => $extension->next_bundle_uuid]);
+            $extension->nextBundle()->update(['status' => 'published']);
+        } else {
+            return response()->error('Unable to find extension to publish.');
+        }
+
+        return ['registryExtension' => new $this->resource($extension)];
+    }
+
+    /**
      * Rejects a specific extension by its ID.
      *
      * Locates a `RegistryExtension` using the provided ID and updates its status to 'rejected'. It also

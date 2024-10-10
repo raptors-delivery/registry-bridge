@@ -18,7 +18,7 @@ export default class ExtensionReviewerControlComponent extends Component {
     }
 
     @task *getExtensionsPendingReview() {
-        this.extensions = yield this.store.query('registry-extension', { status: 'awaiting_review' });
+        this.extensions = yield this.store.query('registry-extension', { status: 'awaiting_review', admin: 1 });
     }
 
     @task *downloadBundle(extension) {

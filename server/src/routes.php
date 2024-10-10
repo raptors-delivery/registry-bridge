@@ -58,6 +58,7 @@ Route::prefix(config('internals.api.routing.prefix', '~registry'))->middleware([
                     $router->post('{id}/submit', $controller('submit'));
                     $router->post('approve', $controller('approve'));
                     $router->post('reject', $controller('reject'));
+                    $router->post('publish', $controller('manualPublish'));
                     $router->get('download-bundle', $controller('downloadBundle'));
                     $router->get('analytics', $controller('analytics'));
                     $router->get('installed', $controller('installed'))->middleware([Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class]);
