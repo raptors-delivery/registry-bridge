@@ -15,6 +15,8 @@ use Fleetbase\Traits\HasMetaAttributes;
 use Fleetbase\Traits\HasPublicId;
 use Fleetbase\Traits\HasUuid;
 use Fleetbase\Traits\Searchable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use stdClass;
@@ -111,44 +113,30 @@ class RegistryExtensionBundle extends Model
         });
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function company()
+    public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_uuid', 'uuid');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function createdBy()
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_uuid', 'uuid');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function extension()
+    public function extension(): BelongsTo
     {
         return $this->belongsTo(RegistryExtension::class, 'extension_uuid', 'uuid');
     }
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function bundle()
+    public function bundle(): BelongsTo
     {
         return $this->belongsTo(File::class, 'bundle_uuid', 'uuid');
     }
 
     /**
      * Get the bundle original filename.
-     *
-     * @return string
      */
-    public function getBundleFilenameAttribute()
+    public function getBundleFilenameAttribute(): ?string
     {
         if ($this->bundle instanceof File) {
             return $this->bundle->original_filename;
@@ -168,7 +156,7 @@ class RegistryExtensionBundle extends Model
      *
      * @return string a unique, uppercase bundle ID
      */
-    public static function generateUniqueBundleId()
+    public static function generateUniqueBundleId(): string
     {
         do {
             $prefix          = 'EXTBNDL';
@@ -204,7 +192,7 @@ class RegistryExtensionBundle extends Model
     protected static function extractBundleFile(File $bundle, $filenames = 'extension.json', $options = []): ?\stdClass
     {
         $shouldParseJson = data_get($options, 'parse_json', true);
-        $tempDir         = sys_get_temp_dir() . '/' . str_replace(['.', ','], '_', uniqid('fleetbase_zip_', true));
+        $tempDir         = sys_get_temp_dir() . '/' . str_replace(['.', ','], '_', uniqid('fleetbase_archive_', true));
         mkdir($tempDir);
 
         // Download the file to a local temporary directory
@@ -213,7 +201,7 @@ class RegistryExtensionBundle extends Model
         file_put_contents($tempFilePath, $contents);
 
         // Extract file paths
-        $extractedFilePaths = static::_extractAndFindFile($tempFilePath, $tempDir, $filenames);
+        $extractedFilePaths = static::_extractAndFindFile($tempFilePath, $tempDir, $filenames, $bundle->getExtension());
         $result             = new \stdClass();
         foreach ($extractedFilePaths as $filename => $path) {
             if (file_exists($path)) {
@@ -238,46 +226,177 @@ class RegistryExtensionBundle extends Model
     }
 
     /**
-     * Extracts and finds the path(s) of specified file(s) within a zipped archive.
+     * Extracts specified files from an uploaded bundle file and optionally parses their contents.
      *
-     * Opens the specified ZIP archive and extracts it to a temporary directory. It then
-     * searches for the given file(s) in both the root and the first valid subdirectory of
-     * the unzipped content. It returns an associative array of file paths, indexed by filenames.
-     * Invalid directories such as '__MACOSX', '.', '..', etc., are excluded from the search.
+     * This method handles the extraction of files from an uploaded archive (ZIP or TAR.GZ) and returns their contents.
      *
-     * @param string       $zipFilePath path to the ZIP archive file
-     * @param string       $tempDir     temporary directory where the ZIP file is extracted
-     * @param string|array $targetFiles a single filename or an array of filenames to search for within the archive
+     * @param UploadedFile $bundle    the uploaded bundle file to extract
+     * @param string|array $filenames The filename or array of filenames to extract from the bundle (default: 'extension.json').
+     * @param array        $options   additional options:
+     *                                - 'parse_json' (bool): Whether to parse the file contents as JSON (default: true)
      *
-     * @return array associative array of paths for the requested files within the archive
+     * @return \stdClass|null an object containing the extracted file contents, or null if extraction fails
+     *
+     * @throws \Exception if extraction of the bundle fails
      */
-    private static function _extractAndFindFile($zipFilePath, $tempDir, $targetFiles)
+    public static function extractUploadedBundleFile(UploadedFile $bundle, $filenames = 'extension.json', $options = []): ?\stdClass
+    {
+        $shouldParseJson = data_get($options, 'parse_json', true);
+        $tempDir         = sys_get_temp_dir() . '/' . str_replace(['.', ','], '_', uniqid('fleetbase_archive_', true));
+        mkdir($tempDir);
+
+        // Download the file to a local temporary directory
+        $tempFilePath = $bundle->getPathname();
+
+        // Get the archive extension
+        $extension = $bundle->guessExtension();
+        if ($extension === 'gz') {
+            $extension = 'tar.gz';
+        }
+
+        // Extract file paths
+        $extractedFilePaths = static::_extractAndFindFile($tempFilePath, $tempDir, $filenames, $extension);
+        $result             = new \stdClass();
+        foreach ($extractedFilePaths as $filename => $path) {
+            if (file_exists($path)) {
+                $fileContents = file_get_contents($path);
+                if ($shouldParseJson) {
+                    $result->$filename = json_decode($fileContents);
+                } else {
+                    $result->$filename = $fileContents;
+                }
+            }
+        }
+
+        // Cleanup: Delete the temporary directory
+        try {
+            array_map('unlink', glob("$tempDir/*.*"));
+        } catch (\Throwable $e) {
+            // Probably a directory ...
+        }
+        Utils::deleteDirectory($tempDir);
+
+        return $result;
+    }
+
+    /**
+     * Extracts target files from an archive and finds their paths.
+     *
+     * This method handles both ZIP and TAR.GZ archives. It extracts the archive to a temporary directory
+     * and searches for the specified target files within the extracted contents.
+     *
+     * @param string       $archiveFilePath the full path to the archive file to extract
+     * @param string       $tempDir         the temporary directory where the archive will be extracted
+     * @param string|array $targetFiles     the filename or array of filenames to search for within the extracted contents
+     * @param string       $extension       the expected extension of the archive file (default: 'zip')
+     *
+     * @return array an associative array where keys are target filenames and values are their full paths within the extracted contents
+     *
+     * @throws \Exception if the archive format is unsupported or extraction fails
+     */
+    private static function _extractAndFindFile($archiveFilePath, $tempDir, $targetFiles, $extension = 'zip'): array
     {
         $paths = [];
-        $zip   = new \ZipArchive();
 
-        if ($zip->open($zipFilePath) === true) {
+        // Ensure $tempDir exists
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+
+        // Get the base name of the archive file with extension
+        $archiveFileName = basename($archiveFilePath);
+
+        // Determine the extension of the archive file
+        $archiveExtension = pathinfo($archiveFileName, PATHINFO_EXTENSION);
+        if (empty($archiveExtension)) {
+            // Try to determine the extension from the MIME type
+            $finfo    = new \finfo(FILEINFO_MIME_TYPE);
+            $mimeType = $finfo->file($archiveFilePath);
+
+            if ($mimeType === 'application/zip') {
+                $archiveExtension = 'zip';
+            } elseif ($mimeType === 'application/gzip' || $mimeType === 'application/x-gzip') {
+                $archiveExtension = 'gz';
+            } else {
+                $archiveExtension = $extension; // Default to 'zip' if not detected
+            }
+        }
+
+        // Create a temporary file in $tempDir with the correct extension
+        $tempArchivePath = $tempDir . '/' . uniqid('archive_', false) . '.' . $archiveExtension;
+
+        // Copy the archive file to the temporary file
+        copy($archiveFilePath, $tempArchivePath);
+
+        $zip = new \ZipArchive();
+
+        if ($zip->open($tempArchivePath) === true) {
+            // If it's a ZIP file, extract it
             $zip->extractTo($tempDir);
             $zip->close();
-
-            foreach ((array) $targetFiles as $targetFile) {
-                // Direct check in the tempDir
-                $directPath = $tempDir . '/' . $targetFile;
-                if (file_exists($directPath)) {
-                    $paths[$targetFile] = $directPath;
-                    continue;
+            // Remove the temp archive file
+            unlink($tempArchivePath);
+        } else {
+            // Attempt to handle as tar.gz or tar using system 'tar' command
+            try {
+                // Determine the appropriate flags for tar extraction
+                $flags = '';
+                if (in_array($archiveExtension, ['gz', 'tgz', 'tar.gz'])) {
+                    // For .tar.gz or .tgz files
+                    $flags = '-xzf';
+                } elseif ($archiveExtension === 'tar') {
+                    // For .tar files
+                    $flags = '-xf';
+                } else {
+                    // Unsupported archive format
+                    unlink($tempArchivePath);
+                    throw new \Exception('Unsupported archive format.');
                 }
 
-                // Check in the first subdirectory
-                $files = scandir($tempDir);
-                foreach ($files as $file) {
-                    $invalidDirectories = ['__MACOSX', '.', '..', 'DS_Store', '.DS_Store', '.idea', '.vscode'];
-                    if (!Str::startsWith($file, ['.', '_']) && !in_array($file, $invalidDirectories) && is_dir($tempDir . '/' . $file)) {
-                        $nestedPath = $tempDir . '/' . $file . '/' . $targetFile;
-                        if (file_exists($nestedPath)) {
-                            $paths[$targetFile] = $nestedPath;
-                            break;
-                        }
+                // Build the command safely using escapeshellarg
+                $command = sprintf('tar %s %s -C %s', $flags, escapeshellarg($tempArchivePath), escapeshellarg($tempDir));
+
+                // Execute the command
+                $output    = [];
+                $returnVar = 0;
+                exec($command, $output, $returnVar);
+
+                // Check if the command was successful
+                if ($returnVar !== 0) {
+                    throw new \Exception('Extraction failed with code ' . $returnVar . ': ' . implode("\n", $output));
+                }
+
+                // Clean up temporary archive file
+                unlink($tempArchivePath);
+            } catch (\Exception $e) {
+                // Handle extraction errors
+                // Clean up temporary files
+                if (file_exists($tempArchivePath)) {
+                    unlink($tempArchivePath);
+                }
+                // Throw the exception
+                throw new \Exception('Failed to extract archive: ' . $e->getMessage());
+            }
+        }
+
+        // Now search for the target files in the extracted contents
+        foreach ((array) $targetFiles as $targetFile) {
+            // Direct check in the tempDir
+            $directPath = $tempDir . '/' . $targetFile;
+            if (file_exists($directPath)) {
+                $paths[$targetFile] = $directPath;
+                continue;
+            }
+
+            // Check in the first subdirectory
+            $files = scandir($tempDir);
+            foreach ($files as $file) {
+                $invalidDirectories = ['__MACOSX', '.', '..', 'DS_Store', '.DS_Store', '.idea', '.vscode'];
+                if (!in_array($file, $invalidDirectories) && is_dir($tempDir . '/' . $file)) {
+                    $nestedPath = $tempDir . '/' . $file . '/' . $targetFile;
+                    if (file_exists($nestedPath)) {
+                        $paths[$targetFile] = $nestedPath;
+                        break;
                     }
                 }
             }
@@ -673,6 +792,12 @@ class RegistryExtensionBundle extends Model
         }
     }
 
+    /**
+     * Simulates the installation progress of an extension by publishing progress updates.
+     *
+     * This method publishes progress updates to a SocketCluster channel for each step in the installation process.
+     * It can be used to provide real-time feedback to clients about the installation status.
+     */
     public function runInstallerProgress(): void
     {
         $channel   = implode('.', ['install', $this->company_uuid, $this->extension_uuid]);
@@ -693,6 +818,12 @@ class RegistryExtensionBundle extends Model
         }
     }
 
+    /**
+     * Simulates the uninstallation progress of an extension by publishing progress updates.
+     *
+     * This method publishes progress updates to a SocketCluster channel for each step in the uninstallation process.
+     * It can be used to provide real-time feedback to clients about the uninstallation status.
+     */
     public function runUninstallerProgress(): void
     {
         $channel   = implode('.', ['uninstall', $this->company_uuid, $this->extension_uuid]);
@@ -1011,5 +1142,33 @@ class RegistryExtensionBundle extends Model
 
         // Default progress if no known phrases are matched
         return 0;
+    }
+
+    /**
+     * Calculates the next bundle number for a given extension.
+     *
+     * This method counts the existing bundles associated with the extension and returns the next sequential number.
+     *
+     * @param string|RegistryExtension $extension the UUID of the extension or a RegistryExtension instance
+     *
+     * @return int the next bundle number for the extension
+     */
+    public static function getNextBundleNumber(string|RegistryExtension $extension): int
+    {
+        $numberOfBundles = RegistryExtensionBundle::whereHas('extension', function ($query) use ($extension) {
+            $query->where('uuid', Str::isUuid($extension) ? $extension : $extension->uuid);
+        })->count();
+
+        return ($numberOfBundles ?? 0) + 1;
+    }
+
+    /**
+     * Retrieves the next bundle number for the current extension instance.
+     *
+     * @return int the next bundle number
+     */
+    public function nextBundleNumber()
+    {
+        return static::getNextBundleNumber($this->extension_uuid);
     }
 }

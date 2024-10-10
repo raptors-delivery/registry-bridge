@@ -212,6 +212,11 @@ class RegistryUser extends Model
         ->first();
     }
 
+    public static function findFromToken(string $token): ?RegistryUser
+    {
+        return static::where('registry_token', $token)->orWhere('token', $token)->first();
+    }
+
     /**
      * Determine if the registry user can access a specific package.
      *
