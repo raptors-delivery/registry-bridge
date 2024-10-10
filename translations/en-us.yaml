@@ -6,6 +6,7 @@ registry-bridge:
     approve: Approve
     reject: Reject
     details: Details
+    publish: Publish
     about: About
     about-extension: About {extensionName}
   component:
@@ -26,6 +27,7 @@ registry-bridge:
         {extensionName} Details
       download-bundle: Download Bundle
       view-details: View Details
+      publish: Publish
       no-extensions-awaiting-publish: No extensions awaiting publish
     extension-reviewer-control:
       content-panel-title: Extensions Awaiting Review

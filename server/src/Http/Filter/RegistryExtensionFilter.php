@@ -10,7 +10,7 @@ class RegistryExtensionFilter extends Filter
 {
     public function queryForInternal()
     {
-        if ($this->request->boolean('explore')) {
+        if ($this->request->boolean('explore') || $this->request->boolean('admin')) {
             return;
         }
         $this->builder->where('company_uuid', $this->session->get('company'));
@@ -19,6 +19,14 @@ class RegistryExtensionFilter extends Filter
     public function queryForPublic()
     {
         $this->builder->where('company_uuid', $this->session->get('company'));
+    }
+
+    public function admin()
+    {
+        $user = $this->request->user();
+        if ($user && $user->isNotAdmin()) {
+            $this->builder->where('company_uuid', $this->session->get('company'));
+        }
     }
 
     public function query(?string $searchQuery)

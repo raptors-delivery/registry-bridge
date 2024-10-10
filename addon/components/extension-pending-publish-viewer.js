@@ -16,12 +16,20 @@ export default class ExtensionPendingPublishViewerComponent extends Component {
     }
 
     @task *getExtensionsPendingPublish() {
-        this.extensions = yield this.store.query('registry-extension', { status: 'approved' });
+        this.extensions = yield this.store.query('registry-extension', { status: 'approved', admin: 1 });
     }
 
     @task *downloadBundle(extension) {
         try {
             yield extension.downloadBundle();
+        } catch (error) {
+            this.notifications.error(error.message);
+        }
+    }
+
+    @task *publishExtension(extension) {
+        try {
+            yield extension.publish();
         } catch (error) {
             this.notifications.error(error.message);
         }

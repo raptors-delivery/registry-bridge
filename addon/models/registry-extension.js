@@ -135,6 +135,19 @@ export default class RegistryExtensionModel extends Model {
     }
 
     /**
+     * Submits the registry extension to be manually published.
+     *
+     * @return {Promise<RegistryExtensionModel>}
+     * @memberof RegistryExtensionModel
+     */
+    @action publish(params = {}) {
+        const owner = getOwner(this);
+        const fetch = owner.lookup('service:fetch');
+
+        return fetch.post('registry-extensions/publish', { id: this.id, ...params }, { namespace: '~registry/v1', normalizeToEmberData: true, modelType: 'registry-extension' });
+    }
+
+    /**
      * Submits the registry extension for rejection.
      *
      * @return {Promise<RegistryExtensionModel>}

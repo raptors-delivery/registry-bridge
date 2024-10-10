@@ -16,6 +16,16 @@
                         </div>
                     </button>
                     <div class="space-y-2 mt-3">
+                        {{#unless (eq extension.status "published")}}
+                            <Button
+                                @type="magic"
+                                @size="sm"
+                                @icon="rocket"
+                                @text={{t "registry-bridge.component.extension-pending-publish-viewer.publish"}}
+                                @onClick={{perform this.publishExtension extension}}
+                                class="w-full"
+                            />
+                        {{/unless}}
                         <Button
                             @size="sm"
                             @icon="clipboard-list"

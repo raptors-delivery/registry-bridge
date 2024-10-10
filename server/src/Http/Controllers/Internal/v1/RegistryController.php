@@ -5,7 +5,11 @@ namespace Fleetbase\RegistryBridge\Http\Controllers\Internal\v1;
 use Fleetbase\Http\Controllers\Controller;
 use Fleetbase\Http\Resources\Category as CategoryResource;
 use Fleetbase\Models\Category;
+use Fleetbase\Models\File;
 use Fleetbase\RegistryBridge\Models\RegistryExtension;
+use Fleetbase\RegistryBridge\Models\RegistryExtensionBundle;
+use Fleetbase\RegistryBridge\Models\RegistryUser;
+use Fleetbase\RegistryBridge\Support\Utils;
 use Illuminate\Http\Request;
 
 class RegistryController extends Controller
@@ -136,5 +140,155 @@ class RegistryController extends Controller
             'npm'      => $packageJsonName,
             'composer' => $composerJsonName,
         ]);
+    }
+
+    /**
+     * Handles the upload of an extension bundle to the registry.
+     *
+     * This method performs the following operations:
+     * - Authenticates the user using a Bearer token from the Authorization header.
+     * - Validates the uploaded bundle file (ensuring it's a valid tar.gz file).
+     * - Extracts necessary files (`extension.json`, `package.json`, `composer.json`) from the bundle.
+     * - Associates the bundle with the correct extension based on package information.
+     * - Checks if the user is authorized to upload bundles for the extension.
+     * - Uploads the bundle to the storage system.
+     * - Creates a file record in the database.
+     * - Updates metadata and versioning information.
+     * - Creates a new extension bundle record.
+     *
+     * @param Request $request the HTTP request containing the bundle file and authentication token
+     *
+     * @return \Illuminate\Http\JsonResponse a JSON response indicating the success or failure of the upload process
+     */
+    public function bundleUpload(Request $request)
+    {
+        // Check for Authorization header
+        $authHeader = $request->header('Authorization');
+        if (!$authHeader) {
+            return response()->json(['error' => 'Unauthorized.'], 401);
+        }
+
+        // Extract the token from the 'Bearer ' prefix
+        $token = null;
+        if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            $token = $matches[1];
+        }
+
+        // Validate the token (implement your own token validation logic)
+        $registryUser = RegistryUser::findFromToken($token);
+        if (!$registryUser) {
+            return response()->json(['error' => 'Unauthorized.', 'token' => $token], 401);
+        }
+
+        // Check if file was uploaded
+        if (!$request->hasFile('bundle')) {
+            return response()->json(['error' => 'No bundle uploaded.'], 400);
+        }
+
+        $bundle = $request->file('bundle');
+
+        // Validate the file
+        if (!$bundle->isValid()) {
+            return response()->json(['error' => 'Invalid bundle file uploaded.'], 400);
+        }
+
+        // Ensure the file is a tar.gz
+        $mimeType = $bundle->getMimeType();
+        if ($mimeType !== 'application/gzip' && $mimeType !== 'application/x-gzip') {
+            return response()->json(['error' => 'Invalid bundle file type.'], 400);
+        }
+
+        // Get the extension assosciated to bundle by extension name
+        try {
+            $bundleData = RegistryExtensionBundle::extractUploadedBundleFile($bundle, ['extension.json', 'package.json', 'composer.json']);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+
+        $bundlePackageData = Utils::getObjectKeyValue($bundleData, 'package.json') ?? Utils::getObjectKeyValue($bundleData, 'composer.json');
+        if ($bundlePackageData && data_get($bundlePackageData, 'name')) {
+            $extension = RegistryExtension::findByPackageName(data_get($bundlePackageData, 'name'));
+            if (!$extension) {
+                return response()->json(['error' => 'Unable to find extension for the uploaded bundle.'], 400);
+            }
+
+            if ($extension->company_uuid !== $registryUser->company_uuid) {
+                return response()->json(['error' => 'User is not authorized to upload bundles for this extension.'], 401);
+            }
+        } else {
+            return response()->json(['error' => 'Unable to parse uploaded bundle.'], 400);
+        }
+
+        // Prepare to upload the bundle
+        $size        = $bundle->getSize();
+        $fileName    = File::randomFileNameFromRequest($request, 'bundle');
+        $disk        = config('filesystems.default');
+        $bucket      = config('filesystems.disks.' . $disk . '.bucket', config('filesystems.disks.s3.bucket'));
+        $path        = 'uploads/extensions/' . $extension->uuid . '/bundles';
+        $type        = 'extension_bundle';
+
+        // Upload the bundle
+        try {
+            $path = $bundle->storeAs($path, $fileName, ['disk' => $disk]);
+        } catch (\Throwable $e) {
+            return response()->error($e->getMessage());
+        }
+
+        // If file upload failed
+        if ($path === false) {
+            return response()->error('File upload failed.');
+        }
+
+        // Create a file record
+        try {
+            $file = File::createFromUpload($request->file('bundle'), $path, $type, $size, $disk, $bucket);
+        } catch (\Throwable $e) {
+            return response()->error($e->getMessage());
+        }
+
+        // Set company and uploader
+        $file->update([
+            'company_uuid'  => $registryUser->company_uuid,
+            'uploader_uuid' => $registryUser->user_uuid,
+        ]);
+
+        // Set file subject to extension
+        $file = $file->setSubject($extension);
+
+        // Get extension.json contents
+        $extensionJson = Utils::getObjectKeyValue($bundleData, 'extension.json');
+        if (!$extensionJson) {
+            return response()->error('Unable to find `extension.json` file required in bundle.');
+        }
+
+        // Set version in file meta
+        $file->updateMeta('version', data_get($extensionJson, 'version'));
+
+        // Check if version is set
+        if (!isset($extensionJson->version)) {
+            return response()->error('No `version` set in the `extension.json`');
+        }
+
+        // Check if either api or engine property is set
+        if (!isset($extensionJson->engine) && !isset($extensionJson->api)) {
+            return response()->error('No `api` or `engine` property set in the `extension.json`');
+        }
+
+        // Set bundle number to parsed JSON
+        $extensionJson->bundle_number = RegistryExtensionBundle::getNextBundleNumber($extension);
+
+        // Create the bundle
+        $extensionBundle = RegistryExtensionBundle::create([
+            'company_uuid'    => $registryUser->company_uuid,
+            'created_by_uuid' => $registryUser->user_uuid,
+            'extension_uuid'  => $extension->uuid,
+            'bundle_uuid'     => $file->uuid,
+            'status'          => 'pending',
+        ]);
+
+        $extensionBundle->update(['bundle_number' => $extensionJson->bundle_number, 'version' => $extensionJson->version]);
+        $extensionBundle->updateMetaProperties((array) $bundleData);
+
+        return response()->json(['message' => 'Bundle uploaded successfully', 'filename' => $fileName, 'bundle' => $extensionBundle, 'extension' => $extension], 200);
     }
 }
