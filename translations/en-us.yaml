@@ -21,6 +21,8 @@ registry-bridge:
       website: Website
       self-managed: Self Managed
       self-managed-help-text: A self-managed extension is designed for users who host Fleetbase on their own servers, outside of the cloud/SaaS environment. These extensions require manual installation and configuration. If you are using Fleetbase as a self-hosted instance, you can use these extensions to add additional features. However, they are not available for cloud/SaaS users.
+      self-hosted-install: Self Hosted Install
+      self-hosted-install-help-text: View self-hosted install instructions.
     extension-pending-publish-viewer:
       content-panel-title: Extensions Pending Publish
       focused-extension-title: >

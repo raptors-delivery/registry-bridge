@@ -49,7 +49,7 @@ class RegistryController extends Controller
     public function getInstalledEngines(Request $request)
     {
         if ($request->session()->has('company')) {
-            $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
+            $installedExtensions = RegistryExtension::whereHas('installs', function ($query) {
                 $query->where('company_uuid', session('company'));
             })->get()->map(function ($extension) {
                 return $extension->currentBundle->meta['package.json'] ?? [];
@@ -77,8 +77,7 @@ class RegistryController extends Controller
         $engine = $request->input('engine');
 
         if ($request->session()->has('company') && $engine) {
-            $installed = RegistryExtension::disableCache()
-            ->whereHas(
+            $installed = RegistryExtension::whereHas(
                 'currentBundle',
                 function ($query) use ($engine) {
                     $query->where('meta->package.json->name', $engine);

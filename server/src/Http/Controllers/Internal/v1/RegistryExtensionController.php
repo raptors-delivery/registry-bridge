@@ -68,7 +68,7 @@ class RegistryExtensionController extends RegistryBridgeController
      */
     public function installed()
     {
-        $installedExtensions = RegistryExtension::disableCache()->whereHas('installs', function ($query) {
+        $installedExtensions = RegistryExtension::whereHas('installs', function ($query) {
             $query->where('company_uuid', session('company'));
         })->get();
 
@@ -92,7 +92,7 @@ class RegistryExtensionController extends RegistryBridgeController
      */
     public function purchased()
     {
-        $purchasedExtensions = RegistryExtension::disableCache()->whereHas('purchases', function ($query) {
+        $purchasedExtensions = RegistryExtension::whereHas('purchases', function ($query) {
             $query->where('company_uuid', session('company'));
         })->get();
 
