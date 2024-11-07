@@ -165,7 +165,7 @@ export default class ExtensionCardComponent extends Component {
     async selfManagedInstallInstructions(options = {}) {
         await this.modalsManager.done();
         this.modalsManager.show('modals/self-managed-install-instructions', {
-            title: 'Install a Self Managed Extension',
+            title: 'Install Extension to Self-Hosted Instance',
             hideDeclineButton: true,
             acceptButtonText: 'Done',
             ...options,

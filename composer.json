@@ -1,6 +1,6 @@
 {
     "name": "fleetbase/registry-bridge",
-    "version": "0.0.17",
+    "version": "0.0.18",
     "description": "Internal Bridge between Fleetbase API and Extensions Registry",
     "keywords": [
         "fleetbase-extension",
@@ -33,12 +33,6 @@
         "phpstan/phpstan": "^1.10.38",
         "symfony/var-dumper": "^5.4.29"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/fleetbase/laravel-model-caching"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Fleetbase\\RegistryBridge\\": "server/src/",

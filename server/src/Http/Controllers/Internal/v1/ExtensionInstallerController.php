@@ -36,7 +36,7 @@ class ExtensionInstallerController extends Controller
         $extension = RegistryExtension::where('public_id', $request->input('extension'))->first();
 
         // Check if already installed
-        $installed = RegistryExtensionInstall::disableCache()->where(['company_uuid' => session('company'), 'extension_uuid' => $extension->uuid])->exists();
+        $installed = RegistryExtensionInstall::where(['company_uuid' => session('company'), 'extension_uuid' => $extension->uuid])->exists();
         if ($installed) {
             return response()->error('This extension is already installed.');
         }
@@ -105,7 +105,7 @@ class ExtensionInstallerController extends Controller
         $uninstalled = false;
 
         // Check if already uninstalled
-        $uninstalled = RegistryExtensionInstall::disableCache()->where(['company_uuid' => session('company'), 'extension_uuid' => $extension->uuid])->doesntExist();
+        $uninstalled = RegistryExtensionInstall::where(['company_uuid' => session('company'), 'extension_uuid' => $extension->uuid])->doesntExist();
         if ($uninstalled) {
             return response()->error('This extension is not installed.');
         }

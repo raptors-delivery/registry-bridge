@@ -69,21 +69,21 @@
                             {{/if}}
                         </div>
                     </div>
-                    <div class="space-y-2">
-                        {{#if this.extension.self_managed}}
+                    {{#if @options.viewSelfManagesInstallInstructions}}
+                        <div class="space-y-2">
                             <div>
-                                <Badge @status="info" @hideStatusDot={{true}} @helpText={{t "registry-bridge.component.extension-details-modal.self-managed-help-text"}}>{{t
-                                        "registry-bridge.component.extension-details-modal.self-managed"
-                                    }}</Badge>
-                                {{#if @options.viewSelfManagesInstallInstructions}}
-                                    <a href="#" class="text-xs text-blue-400 hover:opacity-50" {{on "click" @options.viewSelfManagesInstallInstructions}}><FaIcon
-                                            @icon="circle-info"
-                                            class="mr-1"
-                                        />How to install</a>
-                                {{/if}}
+                                <Button
+                                    @size="xs"
+                                    @type="magic"
+                                    @text={{t "registry-bridge.component.extension-details-modal.self-hosted-install"}}
+                                    @helpText={{t "registry-bridge.component.extension-details-modal.self-hosted-install-help-text"}}
+                                    @tooltipPlacement="right"
+                                    @onClick={{@options.viewSelfManagesInstallInstructions}}
+                                    @icon="circle-info"
+                                />
                             </div>
-                        {{/if}}
-                    </div>
+                        </div>
+                    {{/if}}
                 </div>
             </div>
         </div>
