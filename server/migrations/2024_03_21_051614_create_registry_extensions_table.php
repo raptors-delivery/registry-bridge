@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('registry_extensions', function (Blueprint $table) {
             $table->increments('id');
-            $table->uuid('uuid')->index(); 
-            $table->uuid('company_uuid'); 
+            $table->uuid('uuid')->index();
+            $table->uuid('company_uuid');
             $table->uuid('created_by_uuid')->nullable();
             $table->uuid('registry_user_uuid')->nullable();
             $table->uuid('current_bundle_uuid')->nullable();
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->string('subscription_model')->nullable(); // flat_rate, usage, tiered
             $table->integer('subscription_amount')->nullable();
             $table->json('subscription_tiers')->nullable(); // [{ first: 1, last: 5, per_unit: 100, flat_fee: 0 }]
-            $table->string('currency')->default('USD');
+            $table->string('currency')->default('EGP');
             $table->string('slug');
             $table->string('version')->nullable();
             $table->string('fa_icon')->nullable();
