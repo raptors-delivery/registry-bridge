@@ -187,8 +187,17 @@ class RegistryAuthController extends Controller
             return response()->json(['allowed' => true]);
         }
 
+        // if no identity provided
+        if (!$identity) {
+            return response()->error('No identity provided.', 401);
+        }
+
         // Get registry user via identity
-        $registryUser = RegistryUser::findFromUsername($identity);
+        try {
+            $registryUser = RegistryUser::findFromUsername($identity);
+        } catch (\Exception $e) {
+            return response()->error($e->getMessage(), 401);
+        }
 
         // If registry user is admin allow access
         if ($registryUser->is_admin) {
